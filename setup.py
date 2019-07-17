@@ -26,5 +26,5 @@ setup(
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
     install_requires=['beautifulsoup4==4.7.1', 'cachetools==3.1.1',
-                      'pandas==0.24.2', 'requests==2.22.0']
+                      'pandas==0.24.2', 'requests==2.22.0', 'Unidecode==1.1.1']
 )
