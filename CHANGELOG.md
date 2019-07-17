@@ -6,3 +6,5 @@
 	* Started structuring project;
 	* Started implementing scraper module with its first class: Scrapedia;
 	* Created errors module for Scrapedia's custom errors;
+	* Started creating unit tests for the class Scrapedia;
+	* Added cache tools to Scrapedia;

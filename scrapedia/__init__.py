@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 	Scrapedia
 	---------
@@ -10,3 +12,6 @@
 """
 
 __all__ = ['scraper']
+
+
+from .scraper import Scrapedia
