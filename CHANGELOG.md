@@ -12,3 +12,6 @@
 	* Added ScrapediaChampionship class to access data related to specific championships;
 
 * 06-17-2019:
+	* Added session usage to requests object to enable retrying of requests based on the status code;
+	* Started creation of the fetch method of championships;
+	* Created utils package;

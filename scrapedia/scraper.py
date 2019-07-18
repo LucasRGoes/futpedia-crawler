@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import json
 import logging
 from functools import partial
 
@@ -10,7 +11,10 @@ from bs4 import BeautifulSoup
 from unidecode import unidecode
 from cachetools import cachedmethod, TTLCache
 from cachetools.keys import hashkey
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
+from . import utils
 from .errors import FutpediaRequestError, FutpediaNotFoundError
 
 
@@ -24,24 +28,32 @@ class Scrapedia(object):
 
 	Public methods: status, teams, championship, championships.
 	"""
-	def __init__(self, disable_logger=False, cache_size=2, cache_ttl=300):
+	def __init__(self, max_retries=5, disable_logger=False, cache_ttl=300):
 		"""Scrapedia's constructor.
 	
 		Keyword arguments:
+		max_retries -- number of maximum retries on each request
+		(default 5);
+
 		disable_logger -- a boolean flag to enable or disable logging for the
-						  class instance;
-		cache_size -- the maximum size of the instance's inner cache;
-		cache_ttl -- instance's inner cache time to live;
+		class instance (default False);
+
+		cache_ttl -- instance's inner cache time to live (default 300);
 		"""
+		self.session = requests.Session()
 		self.logger = logging.getLogger(__name__)
+		self.cache = TTLCache(maxsize=2, ttl=cache_ttl)
+
+		retries = Retry(total=max_retries, backoff_factor=1,
+						status_forcelist=[403, 404, 502, 503, 504])
+		self.session.mount('http://', HTTPAdapter(max_retries=retries))
 		self.logger.disabled = disable_logger
-		self.cache = TTLCache(maxsize=cache_size, ttl=cache_ttl)
 
 	def status(self):
 		"""Requests base url and return True if it answers with 200 OK and
 		False otherwise.
 		"""
-		req = requests.get(BASE_URL)
+		req = self.session.get(BASE_URL)
 
 		if req.status_code == 200:
 			self.logger.debug(
@@ -66,14 +78,15 @@ class Scrapedia(object):
 		name -- name of the championship to be accessed;
 		"""
 
-		# Calculates hash and searches for the championship
+		# Calculates hash and searches for the championship.
 		hash_ = unidecode(name.lower().replace(' ', ''))
 		hash_table = self.__full_championships()
 
 		champ = hash_table.get(hash_)
 
 		if champ is not None:
-			return ScrapediaChampionship(champ['name'], champ['href'])
+			return ScrapediaChampionship(champ['name'], champ['href'],	
+										 self.session, self.cache)
 		else:
 			raise FutpediaNotFoundError('the chosen championship couldn\'t be'
 										' found, see list of championships'
@@ -94,7 +107,7 @@ class Scrapedia(object):
 
 		Notes: This method has its results cached.
 		"""
-		req = requests.get('{0}/times'.format(BASE_URL))
+		req = self.session.get('{0}/times'.format(BASE_URL))
 
 		if req.status_code == 200:
 			self.logger.debug(
@@ -110,7 +123,7 @@ class Scrapedia(object):
 				raise FutpediaNotFoundError('An expected attribute or tag is '
 										    'missing from the requested page.')
 
-			# Creates hash table to cache data
+			# Creates hash table to cache data.
 			hash_table = {}
 			for team in teams:
 				team = {
@@ -141,7 +154,7 @@ class Scrapedia(object):
 
 		Notes: This method has its results cached.
 		"""
-		req = requests.get(BASE_URL)
+		req = self.session.get(BASE_URL)
 
 		if req.status_code == 200:
 			self.logger.debug(
@@ -157,7 +170,7 @@ class Scrapedia(object):
 				raise FutpediaNotFoundError('An expected attribute or tag is '
 										    'missing from the requested page.')
 
-			# Creates hash table to cache data
+			# Creates hash table to cache data.
 			hash_table = {}
 			for champ in champs:
 
@@ -197,24 +210,29 @@ class Scrapedia(object):
 class ScrapediaChampionship(object):
 	"""Class used as a stub over futpedia.globo.com championship endpoints.
 
-	Public methods: 
+	Public methods: status.
 	"""
-	def __init__(self, name, href):
+	def __init__(self, name, href, session, cache):
 		"""ScrapediaChampionship's constructor.
 	
 		Keyword arguments:
 		name -- name of the championship to be used on the requests;
 		href -- href of the championship webpage;
+		session -- the requests session to be used to make HTTP requests;
+		cache -- object to cache data;
 		"""
-		self.logger = logging.getLogger(__name__)
 		self.name = name
 		self.href = href
+		self.session = session
+		self.cache = cache
+
+		self.logger = logging.getLogger(__name__)
 
 	def status(self):
 		"""Requests championship url and return True if it answers with 200 OK
 		and False otherwise.
 		"""
-		req = requests.get('{0}/{1}'.format(BASE_URL, self.href))
+		req = self.session.get('{0}/{1}'.format(BASE_URL, self.href))
 
 		if req.status_code == 200:
 			self.logger.debug(
@@ -226,3 +244,40 @@ class ScrapediaChampionship(object):
 				'Request \'{0}/{1}\' returned unexpected status code {2}.' \
 				.format(BASE_URL, self.href, req.status_code))
 			return False
+
+	def fetch(self, target_season, number_seasons=1):
+		"""Fetches data of each seasons of the championship between the
+		target_season and target_season + number_seasons - 1.
+		
+		Keyword arguments:
+		target_season -- the starting season to fetch;
+		number_seasons -- number of seasons to be fetched;
+		"""
+		req = self.session.get('{0}/{1}'.format(BASE_URL, self.href))
+
+		if req.status_code == 200:
+			self.logger.debug(
+				'Request \'{0}/{1}\' returned expected status code 200.' \
+				.format(BASE_URL, self.href))
+			
+			soup = BeautifulSoup(req.content, 'html.parser')
+			tag = soup.find(
+				'script',
+				string=lambda s: s is not None and s.find('static_host') != -1
+			)
+
+			# Finds target text at tag to parse it
+			stt = tag.string.find('{"campeonato":')
+			end = tag.string.find('}]};') + 3
+			championships = json.loads(tag.string[stt:end])
+
+			return championships['edicoes']
+
+		else:
+			self.logger.error(
+				'Request \'{0}/{1}\' returned unexpected status code {2}.' \
+				.format(BASE_URL, self.href, req.status_code))
+
+			raise FutpediaRequestError(
+				'Request \'{0}/{1}\' returned unexpected status code {2}.' \
+				.format(BASE_URL, self.href, req.status_code))
