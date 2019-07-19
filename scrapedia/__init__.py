@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
-	Scrapedia
-	---------
+Scrapedia: A scraper/crawler of Futpédia
+========================================
 
-	A scraper/crawler used for the extraction of historic data from the
-	webpage futpedia.globo.com.
-
-	:author: Lucas Góes - 2019
-	:license: MIT
+__license__ =  MIT
+__author__ = 'Lucas Góes'
+__email__ = 'lucas.rd.goes@gmail.com'
 """
 
-__all__ = ['scraper']
+from .version import __version__
 
 
-from .scraper import Scrapedia
+__all__ = ['scrapers', 'errors']

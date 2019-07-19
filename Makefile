@@ -1,15 +1,21 @@
-########################
-# Scrapedia's Makefile #
-########################
-
-VENV := $$(pip -V | grep -c "venv")
+.PHONY: venv system-packages python-packages install unit-tests tests all
 
 venv:
-	@virtualenv venv
+	pip install --user virtualenv
+	virtualenv venv
 
-init:
-	@if [ "$(VENV)" = "0" ]; then echo "Verify if 'make venv' and 'source venv/bin/activate' were run."; else pip install -r requirements.txt && pip install -e .; fi
+system-packages:
+	sudo apt install python-pip -y
 
-test:
-	# Unit Tests
-	python -m unittest tests/unit/test_scraper.py
+python-packages:
+	pip install -r requirements.txt
+	pip install -e .
+
+install: system-packages python-packages
+
+unit-tests:
+	python -m unittest tests.test_scrapers
+
+tests: unit-tests
+
+all: install tests
