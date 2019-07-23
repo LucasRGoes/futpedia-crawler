@@ -7,6 +7,7 @@ ChampionshipScraper.
 
 import json
 import logging
+from datetime import datetime
 from functools import partial
 
 import requests
@@ -33,19 +34,19 @@ class CoreScraper(object):
 	def __init__(self, base_url: str=BASE_URL, request_retries: int=5,
 				 cache_maxsize: int=10, cache_ttl: int=300,
 				 logger_disable: bool=False):
-		"""CoreScraper constructor.
+		"""CoreScraper's constructor.
 		
 		Parameters
 		----------
 		base_url: str -- base url for all of the scraper requests (default
 		BASE_URL)
-		request_retries : int -- number of maximum retries of requests on
+		request_retries: int -- number of maximum retries of requests on
 		cases where the status code is in a given set (default 5)
-		cache_maxsize : int -- maximum number of objects to be stored
+		cache_maxsize: int -- maximum number of objects to be stored
 		simultaneously on the internal cache (default 10)
-		cache_ttl : int -- time to live in seconds for internal caching of
+		cache_ttl: int -- time to live in seconds for internal caching of
 		data (default 300)
-		logger_disable : bool -- a flag to enable or disable logging (default
+		logger_disable: bool -- a flag to enable or disable logging (default
 		False)
 		"""
 		self.url = base_url
@@ -72,17 +73,17 @@ class ChampionshipScraper(CoreScraper):
 	"""Scraper that provides an interface to obtain data related to specific
 	championships.
 
-	Methods: status.
+	Methods: status, seasons.
 	"""
-	def __init__(self, name, endpoint, base_url: str=BASE_URL,
+	def __init__(self, name: str, endpoint: str, base_url: str=BASE_URL,
 				 request_retries: int=5, cache_ttl: int=300,
 				 logger_disable: bool=False):
 		"""ChampionshipScraper's constructor.
 	
 		Parameters @CoreScraper
 		-----------------------
-		name : str -- championship name
-		endpoint : str -- endpoint of the championship webpage
+		name: str -- championship name
+		endpoint: str -- endpoint of the championship webpage
 		"""
 		super().__init__(base_url=base_url, request_retries=request_retries,
 						 cache_maxsize=10, cache_ttl=cache_ttl,
@@ -90,12 +91,12 @@ class ChampionshipScraper(CoreScraper):
 		self.name = name
 		self.endpoint = endpoint
 
-	def status(self):
+	def status(self) -> bool:
 		"""Verifies if Futpédia's championship page is currently up.
 
 		Returns
 		-------
-		flag : bool -- if online returns True, otherwise False
+		flag: bool -- if online returns True, otherwise False
 		"""
 		try:
 			self.session.get('{0}{1}'.format(self.url, self.endpoint))
@@ -109,42 +110,118 @@ class ChampionshipScraper(CoreScraper):
 				.format(self.name, err))
 			return False
 
-	def fetch(self, target_season, number_seasons=1):
-		"""Fetches data of each seasons of the championship between the
-		target_season and target_season + number_seasons - 1.
-		
-		Keyword arguments:
-		target_season -- the starting season to fetch;
-		number_seasons -- number of seasons to be fetched;
+	def seasons(self, target_season: int, number_seasons: int=1) -> dict:
+		"""Returns list of Futpédia's seasons of the instance's championship.
+
+		Obs: Obtains teams from private method __scrap_seasons() and modifies
+		the response so that only the teams between target_season and
+		number_seasons - 1 are returned.
+
+		Returns
+		-------
+		teams: list -- list with dictionaries of seasons including year,
+		start_date, end_date, number_goals and number_games
 		"""
-		req = self.session.get('{0}/{1}'.format(BASE_URL, self.href))
+		if number_seasons < 1:
+			raise ValueError('The number_seasons parameter should be higher'
+							 ' than 0.')
 
-		if req.status_code == 200:
+		seasons = [{'year': k, 'start_date': v['start_date'], 
+					'end_date': v['end_date'],
+					'number_goals': v['number_goals'],
+					'number_games': v['number_games']} \
+				   for k, v in self.__scrap_seasons().items()]
+
+		# Validates chosen season
+		first_year = seasons[-1]['year']
+		last_year = seasons[0]['year']
+		if target_season < first_year or target_season > last_year:
+			raise ValueError('The target_season should be between {0} and {1}'
+							 ' for this championship.' \
+							 .format(first_year, last_year))
+
+		return list(filter(
+			lambda x: x['year'] >= target_season \
+					  and x['year'] <= target_season + number_seasons - 1,
+			seasons
+		))
+
+	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'seasons'))
+	def __scrap_seasons(self) -> dict:
+		"""Fetches list of seasons, parses and transforms it into a data
+		object.
+
+		Returns
+		-------
+		seasons: dict -- {
+			start_date: datetime -- date the season started
+			end_date: datetime -- date the season ended
+			number_goals: int -- number of goals made by all teams
+			number_games: int -- number of games played that season
+			endpoint: str -- endpoint of the season webpage
+		}
+		"""
+		try:
+			# Fetches
+			req = self.session.get(
+				'{0}/campeonato/{1}'.format(self.url, self.endpoint))
 			self.logger.debug(
-				'Request \'{0}/{1}\' returned expected status code 200.' \
-				.format(BASE_URL, self.href))
-			
-			soup = BeautifulSoup(req.content, 'html.parser')
-			tag = soup.find(
-				'script',
-				string=lambda s: s is not None and s.find('static_host') != -1
-			)
+				'Request \'{0}/campeonato{1}\' returned expected status code'
+				' 200.'.format(self.url, self.endpoint))
 
-			# Finds target text at tag to parse it
-			stt = tag.string.find('{"campeonato":')
-			end = tag.string.find('}]};') + 3
-			championships = json.loads(tag.string[stt:end])
+		except Exception as err:
+			self.logger.error('Futpédia is currently not online: {0}.' \
+							  .format(err))
+			raise ScrapediaRequestError(
+				'Futpédia is currently not online.') from err
 
-			return championships['edicoes']
+		# Parses
+		soup = BeautifulSoup(req.content, 'html.parser')
+		raw_seasons = soup.find(
+			'script',
+			string=lambda s: s is not None and s.find('static_host') != -1
+		)
 
-		else:
-			self.logger.error(
-				'Request \'{0}/{1}\' returned unexpected status code {2}.' \
-				.format(BASE_URL, self.href, req.status_code))
+		if raw_seasons is None:
+			raise ScrapediaParseError(
+				'Expected <script> tag with \'static_host\' at content,'
+				' but it was not found while parsing.')
 
-			raise FutpediaRequestError(
-				'Request \'{0}/{1}\' returned unexpected status code {2}.' \
-				.format(BASE_URL, self.href, req.status_code))
+		stt = raw_seasons.string.find('{"campeonato":')
+		end = raw_seasons.string.find('}]};') + 3
+		raw_seasons = raw_seasons.string[stt:end]
+
+		try:
+			# Transforms
+			seasons = {}
+			for raw_season in json.loads(raw_seasons).get('edicoes'):
+				raw_season_dates = raw_season.get('edicao')
+
+				season = {
+					'start_date': datetime.strptime(
+									raw_season_dates.get('data_inicio'),
+									'%Y-%m-%d'
+								  ),
+					'end_date': datetime.strptime(
+									raw_season_dates.get('data_fim'),
+									'%Y-%m-%d'
+								),
+					'number_goals': raw_season.get('gols'),
+					'number_games': raw_season.get('jogos'),
+					'endpoint': '/{0}'.format(
+						raw_season_dates.get('slug_editorial'))
+				}
+
+				year = season.get('start_date').year
+				seasons[year] = season
+
+			return seasons
+
+		except json.decoder.JSONDecodeError as err:
+			self.logger.error('Fetched content could not be parsed: {0}.' \
+							  .format(err))
+			raise ScrapediaParseError(
+				'Fetched content could not be parsed.') from err
 
 
 class MainScraper(CoreScraper):
@@ -168,7 +245,7 @@ class MainScraper(CoreScraper):
 
 		Returns
 		-------
-		flag : bool -- if online returns True, otherwise False
+		flag: bool -- if online returns True, otherwise False
 		"""
 		try:
 			self.session.get(self.url)
@@ -184,57 +261,57 @@ class MainScraper(CoreScraper):
 		"""Returns list of Futpédia's teams.
 
 		Obs: Obtains teams from private method __scrap_teams() and modifies
-		the response so that only the teams uids and names are returned.
+		the response so that only the teams ids and names are returned.
 
 		Returns
 		-------
-		teams : list -- list with dictionaries of teams including uids and
+		teams: list -- list with dictionaries of teams including ids and
 		names
 		"""
-		return [{'uid': v['uid'], 'name': v['name']} \
+		return [{'id': k, 'name': v['name']} \
 				for k, v in self.__scrap_teams().items()]
 
-	def championship(self, uid: int) -> ChampionshipScraper:
+	def championship(self, id_: int) -> ChampionshipScraper:
 		"""Factory to return an instance of a ChampionshipScraper class based
-		on the chosen championship uid using cached or requested data.
+		on the chosen championship id using cached or requested data.
 
 		Parameters
 		----------
-		uid : int -- uid of the championship to have a scraper built
+		id_: int -- id of the championship to have a scraper built
 
 		Returns
 		-------
-		parser : ChampionshipScraper -- scraper built targeting the chosen
+		scraper: ChampionshipScraper -- scraper built targeting the chosen
 		championship webpage
 		"""
 
 		champs = self.__scrap_championships()
-		champ = champs.get(uid)
+		champ = champs.get(id_)
 
 		if champ is not None:
 			return ChampionshipScraper(
 				champ['name'], champ['endpoint'], base_url=self.url,
 				logger_disable=self.logger.disabled)
 		else:
-			raise ScrapediaNotFoundError('The chosen uid could not be'
+			raise ScrapediaNotFoundError('The chosen id could not be'
 										' found, use a MainScraper instance to'
 										' list all championships using'
-										' championships() to find the uid you'
+										' championships() to find the id you'
 										' are looking for.')
 
 	def championships(self) -> list:
 		"""Returns list of Futpédia's championships.
 
 		Obs: Obtains championships from private method __scrap_championships()
-		and modifies the response so that only the championships uids and
+		and modifies the response so that only the championships ids and
 		names are returned.
 
 		Returns
 		-------
-		teams : list -- list with dictionaries of championships including uids
+		teams: list -- list with dictionaries of championships including ids
 		and names
 		"""
-		return [{'uid': v['uid'], 'name': v['name']} \
+		return [{'id': k, 'name': v['name']} \
 				for k, v in self.__scrap_championships().items()]
 
 	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'teams'))
@@ -243,9 +320,9 @@ class MainScraper(CoreScraper):
 
 		Returns
 		-------
-		teams : dict -- {
-			name : str -- team name
-			endpoint : str -- endpoint of the team webpage
+		teams: dict -- {
+			name: str -- team name
+			endpoint: str -- endpoint of the team webpage
 		}
 		"""
 		try:
@@ -255,32 +332,30 @@ class MainScraper(CoreScraper):
 				'Request \'{0}/times\' returned expected status code 200.' \
 				.format(self.url))
 
-			# Parses
-			soup = BeautifulSoup(req.content, 'html.parser')
-			raw_teams = soup.find_all(
-				name='li', attrs={'itemprop': 'itemListElement'})
-
-			if not len(raw_teams) > 0:
-				raise ScrapediaParseError(
-					'Expected <li itemprop="itemListElement"> tags, but none'
-					' were found while parsing.')
-
-			# Transforms
-			teams = {}
-			for raw_team in raw_teams:
-				team = {'name': raw_team.string,
-						'endpoint': raw_team.a.get('href')}
-
-				team['uid'] = hash(team['name'])
-				teams[team['uid']] = team
-
-			return teams
-
 		except Exception as err:
 			self.logger.error('Futpédia is currently not online: {0}.' \
 							  .format(err))
 			raise ScrapediaRequestError(
 				'Futpédia is currently not online.') from err
+
+		# Parses
+		soup = BeautifulSoup(req.content, 'html.parser')
+		raw_teams = soup.find_all(
+			name='li', attrs={'itemprop': 'itemListElement'})
+
+		if not len(raw_teams) > 0:
+			raise ScrapediaParseError(
+				'Expected <li itemprop="itemListElement"> tags, but none'
+				' were found while parsing.')
+
+		# Transforms
+		teams = {}
+		for index, raw_team in enumerate(raw_teams):
+			team = {'name': raw_team.string,
+					'endpoint': raw_team.a.get('href')}
+			teams[index + 1] = team
+
+		return teams
 
 	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'champs'))
 	def __scrap_championships(self) -> dict:
@@ -289,9 +364,9 @@ class MainScraper(CoreScraper):
 
 		Returns
 		-------
-		championships : dict -- {
-			name : str -- championship name
-			endpoint : str -- endpoint of the championship webpage
+		championships: dict -- {
+			name: str -- championship name
+			endpoint: str -- endpoint of the championship webpage
 		}
 		"""
 		try:
@@ -301,33 +376,38 @@ class MainScraper(CoreScraper):
 				'Request \'{0}\' returned expected status code 200.' \
 				.format(self.url))
 
-			# Parses
-			soup = BeautifulSoup(req.content, 'html.parser')
-			raw_champs = soup.find(
-				name='script',
-				attrs={'type': 'text/javascript',
-					   'language': 'javascript',
-					   'charset': 'utf-8'}
-			)
+		except Exception as err:
+			self.logger.error('Futpédia is currently not online: {0}.' \
+							  .format(err))
+			raise ScrapediaRequestError(
+				'Futpédia is currently not online.') from err
 
-			if not len(raw_champs) > 0:
-				raise ScrapediaParseError(
-					'Expected <script type="text/javascript"'
-					' language="javascript" charset="utf-8"> tag, but it'
-					' was not found while parsing.')
+		# Parses
+		soup = BeautifulSoup(req.content, 'html.parser')
+		raw_champs = soup.find(
+			name='script',
+			attrs={'type': 'text/javascript',
+				   'language': 'javascript',
+				   'charset': 'utf-8'}
+		)
 
-			stt = raw_champs.string.find('[{')
-			end = raw_champs.string.find('}]') + 2
-			raw_champs = raw_champs.string[stt:end]
+		if not len(raw_champs) > 0:
+			raise ScrapediaParseError(
+				'Expected <script type="text/javascript"'
+				' language="javascript" charset="utf-8"> tag, but it'
+				' was not found while parsing.')
 
+		stt = raw_champs.string.find('[{')
+		end = raw_champs.string.find('}]') + 2
+		raw_champs = raw_champs.string[stt:end]
+
+		try:
 			# Transforms
 			champs = {}
-			for raw_champ in json.loads(raw_champs):
-				champ = {'name': raw_champ['nome'],
-						 'endpoint': '/{0}'.format(raw_champ['slug'])}
-
-				champ['uid'] = hash(champ['name'])
-				champs[champ['uid']] = champ
+			for index, raw_champ in enumerate(json.loads(raw_champs)):
+				champ = {'name': raw_champ.get('nome'),
+						 'endpoint': '/{0}'.format(raw_champ.get('slug'))}
+				champs[index + 1] = champ
 
 			return champs
 
@@ -336,9 +416,3 @@ class MainScraper(CoreScraper):
 							  .format(err))
 			raise ScrapediaParseError(
 				'Fetched content could not be parsed.') from err
-
-		except Exception as err:
-			self.logger.error('Futpédia is currently not online: {0}.' \
-							  .format(err))
-			raise ScrapediaRequestError(
-				'Futpédia is currently not online.') from err
