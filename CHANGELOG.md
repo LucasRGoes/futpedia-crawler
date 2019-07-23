@@ -30,3 +30,4 @@ Changelog
 * __06-22-2019__:
 	* Modified identification logic at cached objects;
 	* Updated ChampionshipScraper.fetch() to seasons();
+	* Started creation of unit tests for ChampionshipScraper;

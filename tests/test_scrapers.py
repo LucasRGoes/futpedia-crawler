@@ -32,7 +32,13 @@ class MainScraperTests(unittest.TestCase):
 			ret = scraper.teams()
 
 			self.assertTrue(isinstance(ret, list))
-			self.assertTrue(all(isinstance(i, dict) for i in ret))
+
+			validate_team_schema = lambda x: x.get('id') is not None \
+											 and isinstance(x['id'], int) \
+											 and x.get('name') is not None \
+											 and isinstance(x['name'], str)
+
+			self.assertTrue(all(validate_team_schema(i) for i in ret))
 
 	def test_championships(self):
 		"""Steps:
@@ -43,7 +49,20 @@ class MainScraperTests(unittest.TestCase):
 			ret = scraper.championships()
 
 			self.assertTrue(isinstance(ret, list))
-			self.assertTrue(all(isinstance(i, dict) for i in ret))
+
+			validate_champ_schema = lambda x: x.get('id') is not None \
+								 			  and isinstance(x['id'], int) \
+										 	  and x.get('name') is not None \
+								 			  and isinstance(x['name'], str)
+
+			self.assertTrue(all(validate_champ_schema(i) for i in ret))
+
+
+class ChampionshipScraperTests(unittest.TestCase):
+	"""Set of unit tests for validating an instance of ChampionshipScraper.
+
+	Tests: test_status.
+	"""
 
 
 if __name__ == 'main':
