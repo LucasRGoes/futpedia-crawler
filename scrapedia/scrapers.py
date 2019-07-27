@@ -6,6 +6,7 @@ ChampionshipScraper
 """
 
 import json
+import time
 from datetime import datetime
 from functools import partial
 
@@ -69,7 +70,7 @@ class ChampionshipScraper(CoreScraper):
 	"""Scraper that provides an interface to obtain data related to specific
 	championships.
 
-	Methods: status, seasons.
+	Methods: status, seasons
 	"""
 	def __init__(self, name: str, endpoint: str, base_url: str=BASE_URL,
 				 request_retries: int=5, cache_ttl: int=300):
@@ -100,7 +101,7 @@ class ChampionshipScraper(CoreScraper):
 		except Exception as err:
 			return False
 
-	def seasons(self, target: int, number: int=1) -> dict:
+	def seasons(self, target: int, number: int=1) -> pd.DataFrame:
 		"""Returns list of Futpédia's seasons of the instance's championship.
 		Obtains teams from private method __scrap_seasons() and modifies the
 		response so that only the teams between target and number - 1 are
@@ -114,48 +115,37 @@ class ChampionshipScraper(CoreScraper):
 
 		Returns
 		-------
-		teams: list -- list with dictionaries of seasons including year, 
-		start_date, end_date, number_goals and number_games
+		teams: pd.DataFrame -- dataframe with the championship's seasons
+		including year, start date, end date, number of goals and number of
+		games
 		"""
 		if number < 1:
 			raise ValueError(
 				'The \'number\' parameter should be higher than 0.')
 
-		seasons = [
-			{'year': k, 'start_date': v['start_date'],
-			 'end_date': v['end_date'], 'number_goals': v['number_goals'],
-			 'number_games': v['number_games']} \
-			for k, v in self.__scrap_seasons().items()
-		]
+		seasons = self.__scrap_seasons()
+		seasons = seasons.drop(columns=['endpoint'])
 
 		# Validates chosen season
-		first_year = seasons[-1]['year']
-		last_year = seasons[0]['year']
+		first_year = seasons.index[-1]
+		last_year = seasons.index[0]
 		if target < first_year or target > last_year:
 			raise ValueError(
 				'The \'target\' parameter should be between {0} and {1}'
 				' for this championship.'.format(first_year, last_year))
 
-		return list(filter(
-			lambda x: x['year'] >= target \
-					  and x['year'] <= target + number - 1,
-			seasons
-		))
+		return seasons.loc[target + number - 1:target, :]
 
 	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'seasons'))
-	def __scrap_seasons(self) -> dict:
+	def __scrap_seasons(self) -> pd.DataFrame:
 		"""Fetches list of seasons, parses and transforms it into a data
 		object.
 
 		Returns
 		-------
-		seasons: dict -- {
-			start_date: datetime -- date the season started
-			end_date: datetime -- date the season ended
-			number_goals: int -- number of goals made by all teams
-			number_games: int -- number of games played that season
-			endpoint: str -- endpoint of the season webpage
-		}
+		seasons: pd.DataFrame -- dataframe with the championship's seasons
+		including year, start date, end date, number of goals, number of games
+		and endpoints
 		"""
 
 		# Fetches
@@ -184,29 +174,33 @@ class ChampionshipScraper(CoreScraper):
 			end = raw_seasons.string.find('}]};') + 3
 			raw_seasons = raw_seasons.string[stt:end]
 
-			seasons = {}
+			indexes = []
+			seasons = []
+
 			for raw_season in json.loads(raw_seasons).get('edicoes'):
-				raw_season_dates = raw_season.get('edicao')
 
-				season = {
-					'start_date': datetime.strptime(
-									raw_season_dates.get('data_inicio'),
-									'%Y-%m-%d'
-								  ),
-					'end_date': datetime.strptime(
-									raw_season_dates.get('data_fim'),
-									'%Y-%m-%d'
-								),
-					'number_goals': raw_season.get('gols'),
-					'number_games': raw_season.get('jogos'),
-					'endpoint': '/{0}'.format(
-						raw_season_dates.get('slug_editorial'))
-				}
+				start_date = datetime.strptime(
+					raw_season.get('edicao').get('data_inicio'), '%Y-%m-%d')
+				end_date = datetime.strptime(
+					raw_season.get('edicao').get('data_fim'), '%Y-%m-%d')
+				number_goals = raw_season.get('gols')
+				number_games = raw_season.get('jogos')
+				endpoint = '/{0}'.format(
+					raw_season.get('edicao').get('slug_editorial'))
 
-				year = season.get('start_date').year
-				seasons[year] = season
+				indexes.append(start_date.year)
 
-			return seasons
+				start_date = time.mktime(start_date.timetuple())
+				end_date = time.mktime(end_date.timetuple())
+
+				seasons.append([start_date, end_date, number_goals,
+								number_games, endpoint])
+
+			return pd.DataFrame(
+				seasons, index=indexes, columns=['start_date', 'end_date',
+												 'number_goals',
+												 'number_games', 'endpoint']
+			)
 
 		except Exception as err:
 			raise ScrapediaTransformError(
@@ -217,7 +211,7 @@ class MainScraper(CoreScraper):
 	"""Scraper that provides easy access to common Futpédia's resources like
 	lists of teams, games and championships.
 
-	Methods: status, team, teams, game, games, championship, championships.
+	Methods: status, team, teams, game, games, championship, championships
 	"""
 	def __init__(self, base_url: str=BASE_URL, request_retries: int=5,
 				 cache_ttl: int=300):
@@ -242,22 +236,6 @@ class MainScraper(CoreScraper):
 		except Exception as err:
 			return False
 
-	def teams(self) -> list:
-		"""Returns list of Futpédia's teams.
-
-		Obs: Obtains teams from private method __scrap_teams() and modifies
-		the response so that only the teams ids and names are returned.
-
-		Returns
-		-------
-		teams: list -- list with dictionaries of teams including ids and
-		names
-		"""
-		return [
-			{'id': k, 'name': v['name']} \
-			for k, v in self.__scrap_teams().items()
-		]
-
 	def championship(self, id_: int) -> ChampionshipScraper:
 		"""Factory to return an instance of a ChampionshipScraper class based
 		on the chosen championship id using cached or requested data.
@@ -271,43 +249,53 @@ class MainScraper(CoreScraper):
 		scraper: ChampionshipScraper -- scraper built targeting the chosen
 		championship webpage
 		"""
+		if id_ < 0:
+			raise ValueError(
+				'The \'id_\' parameter should be higher or equal to 0.')
 
 		champs = self.__scrap_championships()
-		champ = champs.get(id_)
 
-		if champ is not None:
+		try:
+			champ = champs.iloc[id_, :]
 			return ChampionshipScraper(
 				champ['name'], champ['endpoint'], base_url=self.url)
-		else:
-			raise ScrapediaNotFoundError('The chosen id could not be found.')
 
-	def championships(self) -> list:
-		"""Returns list of Futpédia's championships.
+		except Exception as err:
+			raise ScrapediaNotFoundError(
+				'The chosen id could not be found.') from err
 
-		Obs: Obtains championships from private method __scrap_championships()
-		and modifies the response so that only the championships ids and
-		names are returned.
+	def teams(self) -> pd.DataFrame:
+		"""Returns list of Futpédia's teams. Obtains teams from private method
+		__scrap_teams() and modifies the response so that only the teams ids
+		and names are returned.
 
 		Returns
 		-------
-		teams: list -- list with dictionaries of championships including ids
-		and names
+		teams: pd.DataFrame -- dataframe with the teams's ids and names
 		"""
-		return [
-			{'id': k, 'name': v['name']} \
-			for k, v in self.__scrap_championships().items()
-		]
+		df = self.__scrap_teams()
+		return df.drop(columns=['endpoint'])
+
+	def championships(self) -> pd.DataFrame:
+		"""Returns list of Futpédia's championships. Obtains championships
+		from private method __scrap_championships() and modifies the response
+		so that only the championships ids and names are returned.
+
+		Returns
+		-------
+		teams: pd.DataFrame -- dataframe with the championship's ids and names
+		"""
+		df = self.__scrap_championships()
+		return df.drop(columns=['endpoint'])
 
 	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'teams'))
-	def __scrap_teams(self) -> dict:
+	def __scrap_teams(self) -> pd.DataFrame:
 		"""Fetches list of teams, parses and transforms it into a data object.
 
 		Returns
 		-------
-		teams: dict -- {
-			name: str -- team name
-			endpoint: str -- endpoint of the team webpage
-		}
+		teams: pd.DataFrame -- dataframe with the teams's ids, names and
+		endpoints
 		"""
 
 		# Fetches
@@ -329,29 +317,25 @@ class MainScraper(CoreScraper):
 
 		# Transforms
 		try:
-			teams = {}
-			for index, raw_team in enumerate(raw_teams):
-				team = {'name': raw_team.string,
-						'endpoint': raw_team.a.get('href')}
-				teams[index + 1] = team
+			teams = []
+			for raw_team in raw_teams:
+				teams.append([raw_team.string, raw_team.a.get('href')])
 
-			return teams
+			return pd.DataFrame(teams, columns=['name', 'endpoint'])
 
 		except Exception as err:
 			raise ScrapediaTransformError(
 				'Parsed content could not be accessed.') from err
 
 	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'champs'))
-	def __scrap_championships(self) -> dict:
+	def __scrap_championships(self) -> pd.DataFrame:
 		"""Fetches list of championships, parses and transforms it into a data
 		object.
 
 		Returns
 		-------
-		championships: dict -- {
-			name: str -- championship name
-			endpoint: str -- endpoint of the championship webpage
-		}
+		championships: pd.DataFrame -- dataframe with the championship's ids,
+		names and endpoints
 		"""
 
 		# Fetches
@@ -380,14 +364,13 @@ class MainScraper(CoreScraper):
 			stt = raw_champs.string.find('[{')
 			end = raw_champs.string.find('}]') + 2
 			raw_champs = raw_champs.string[stt:end]
-			
-			champs = {}
-			for index, raw_champ in enumerate(json.loads(raw_champs)):
-				champ = {'name': raw_champ.get('nome'),
-						 'endpoint': '/{0}'.format(raw_champ.get('slug'))}
-				champs[index + 1] = champ
 
-			return champs
+			champs = []
+			for raw_champ in json.loads(raw_champs):
+				champs.append([raw_champ.get('nome'),
+							   '/{0}'.format(raw_champ.get('slug'))])
+
+			return pd.DataFrame(champs, columns=['name', 'endpoint'])
 
 		except Exception as err:
 			raise ScrapediaTransformError(

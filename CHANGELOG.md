@@ -34,5 +34,7 @@ Changelog
 
 * __06-26-2019__:
 	* Removed utils.py module. A better practice is trying to solve everything in a 'pythonic' way;
-	* Removed logger usage at scrapers. A better practice is to raise errors concerning the problem that occuered;
+	* Removed logger usage at scrapers. A better practice is to raise errors concerning the problem that occured;
 	* Renamed errors;
+	* Changed lists to pandas.DataFrame on most of the scrapers functions;
+	* Updated tests to cover new return types;
