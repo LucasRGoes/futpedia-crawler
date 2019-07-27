@@ -20,9 +20,9 @@ Changelog
 * __06-18-2019__:
 	* Updated README files and documentation;
 	* Created Jupyter notebooks to document the usage of the mdoule;
-	* Using a VERSION file for version control of the project;
+	* Used a VERSION file for version control of the project;
 	* Added a ScraperCore class to hold common functions of all of the project's scrapers;
-	* Rewriting scraper classes and renaming them in order to facilitate understanding;
+	* Rewrited scraper classes and renamed them in order to facilitate understanding;
 	* Renamed custom exceptions and added a core one so that others can extend from it;
 	* Created error for data from Futpédia that is not found on the requested or cached data;
 	* Updated tests to reflect changes to code;
@@ -31,3 +31,8 @@ Changelog
 	* Modified identification logic at cached objects;
 	* Updated ChampionshipScraper.fetch() to seasons();
 	* Started creation of unit tests for ChampionshipScraper;
+
+* __06-26-2019__:
+	* Removed utils.py module. A better practice is trying to solve everything in a 'pythonic' way;
+	* Removed logger usage at scrapers. A better practice is to raise errors concerning the problem that occuered;
+	* Renamed errors;

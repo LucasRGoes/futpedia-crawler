@@ -10,4 +10,4 @@ __email__ = 'lucas.rd.goes@gmail.com'
 from .version import __version__
 
 
-__all__ = ['scrapers', 'errors']
+__all__ = ['errors', 'scrapers']

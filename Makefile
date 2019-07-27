@@ -1,4 +1,4 @@
-.PHONY: venv system-packages python-packages install unit-tests tests all
+.PHONY: venv system-packages python-packages install unit-tests integration-tests tests all
 
 venv:
 	pip install --user virtualenv
@@ -16,6 +16,8 @@ install: system-packages python-packages
 unit-tests:
 	python -m unittest tests.test_scrapers
 
-tests: unit-tests
+integration-tests:
+
+tests: unit-tests integration-tests
 
 all: install tests
