@@ -38,3 +38,9 @@ Changelog
 	* Renamed errors;
 	* Changed lists to pandas.DataFrame on most of the scrapers functions;
 	* Updated tests to cover new return types;
+
+* __06-30-2019__:
+	* Corrected bug at ChampionshipScraper.scrap_seasons() where the '/' char was being used at the URL before the endpoint;
+	* Created a scraper to fetch data concerning specific seasons of a championship;
+	* Changed ChampionshipScraper.seasons() so that the 'target' parameter is now optional, the default is to fetch all seasons;
+	* Changed default number of retries on a request;

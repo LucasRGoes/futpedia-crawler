@@ -87,7 +87,7 @@ class ChampionshipScraperTests(unittest.TestCase):
 		with scrapers.MainScraper() as scraper:
 			champs = scraper.championships()
 			for i, row in champs.iterrows():
-				with self.subTest(i=i):
+				with self.subTest(i=row.get('name')):
 					with scraper.championship(i) as champ_scraper:
 						status = champ_scraper.status()
 						self.assertIsInstance(status, bool)

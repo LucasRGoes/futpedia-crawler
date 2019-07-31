@@ -1,8 +1,7 @@
 """Scrapedia's collection of scraper classes for fetching and parsing
 Futpédia's soccer data and returning it as more easily accessible objects.
 
-Classes: CoreScraper, MainScraper, TeamScraper, GameScraper,
-ChampionshipScraper
+Classes: CoreScraper, MainScraper, ChampionshipScraper, SeasonScraper
 """
 
 import json
@@ -33,7 +32,7 @@ class CoreScraper(object):
 
 	Methods: __enter__, __exit__
 	"""
-	def __init__(self, base_url: str=BASE_URL, request_retries: int=5,
+	def __init__(self, base_url: str=BASE_URL, request_retries: int=12,
 				 cache_maxsize: int=10, cache_ttl: int=300):
 		"""CoreScraper's constructor.
 		
@@ -66,14 +65,51 @@ class CoreScraper(object):
 		self.session.close()
 
 
+class SeasonScraper(CoreScraper):
+	"""Scraper that provides an interface to obtain data related to specific
+	seasons of a championship.
+
+	Methods: status, games
+	"""
+	def __init__(self, year: int, endpoint: str, base_url: str=BASE_URL,
+				 request_retries: int=12, cache_ttl: int=300):
+		"""SeasonScraper's constructor.
+	
+		Parameters
+		----------
+		year: int -- year in which the season occured
+		endpoint: str -- endpoint of the season webpage
+		Other parameters @scrapers.CoreScraper
+		"""
+		super().__init__(base_url=base_url, request_retries=request_retries,
+						 cache_maxsize=1, cache_ttl=cache_ttl)
+		self.year = year
+		self.endpoint = endpoint
+
+	def status(self) -> bool:
+		"""Verifies if Futpédia's season page is currently up.
+
+		Returns
+		-------
+		flag: bool -- if online returns True, otherwise False
+		"""
+		try:
+			self.session.get(
+				'{0}/campeonato{1}'.format(self.url, self.endpoint))
+			return True
+
+		except Exception as err:
+			return False
+
+
 class ChampionshipScraper(CoreScraper):
 	"""Scraper that provides an interface to obtain data related to specific
 	championships.
 
-	Methods: status, seasons
+	Methods: status, season, seasons
 	"""
 	def __init__(self, name: str, endpoint: str, base_url: str=BASE_URL,
-				 request_retries: int=5, cache_ttl: int=300):
+				 request_retries: int=12, cache_ttl: int=300):
 		"""ChampionshipScraper's constructor.
 	
 		Parameters
@@ -83,7 +119,7 @@ class ChampionshipScraper(CoreScraper):
 		Other parameters @scrapers.CoreScraper
 		"""
 		super().__init__(base_url=base_url, request_retries=request_retries,
-						 cache_maxsize=10, cache_ttl=cache_ttl)
+						 cache_maxsize=1, cache_ttl=cache_ttl)
 		self.name = name
 		self.endpoint = endpoint
 
@@ -95,13 +131,48 @@ class ChampionshipScraper(CoreScraper):
 		flag: bool -- if online returns True, otherwise False
 		"""
 		try:
-			self.session.get('{0}{1}'.format(self.url, self.endpoint))
+			self.session.get(
+				'{0}/campeonato{1}'.format(self.url, self.endpoint))
 			return True
 
 		except Exception as err:
 			return False
 
-	def seasons(self, target: int, number: int=1) -> pd.DataFrame:
+	def season(self, year: int) -> SeasonScraper:
+		"""Factory to return an instance of a SeasonScraper class based
+		on the chosen season year using cached or requested data.
+
+		Parameters
+		----------
+		year: int -- year of the season to have a scraper built
+
+		Returns
+		-------
+		scraper: SeasonScraper -- scraper built targeting the chosen
+		season webpage
+		"""
+		seasons = self.__scrap_seasons()
+
+		# Validates chosen season
+		first_year = seasons.index[-1]
+		last_year = seasons.index[0]
+		if year < first_year or year > last_year:
+			raise ValueError(
+				'The \'year\' parameter should be between {0} and {1}'
+				' for this championship.'.format(first_year, last_year))
+
+		try:
+			season = seasons.loc[year, :]
+			return SeasonScraper(
+				year, '{0}{1}'.format(self.endpoint, season['endpoint']),
+				base_url=self.url
+			)
+
+		except Exception as err:
+			raise ScrapediaNotFoundError(
+				'The chosen year could not be found.') from err
+
+	def seasons(self, target: int=None, number: int=1) -> pd.DataFrame:
 		"""Returns list of Futpédia's seasons of the instance's championship.
 		Obtains teams from private method __scrap_seasons() and modifies the
 		response so that only the teams between target and number - 1 are
@@ -109,9 +180,9 @@ class ChampionshipScraper(CoreScraper):
 
 		Parameters
 		----------
-		target: int -- the season to fetch information about
-		number: int -- the number of seasons to be fetched starting with the
-		target
+		target: int -- the season to fetch information about (default None)
+		number: int -- the number of seasons to be fetched starting from the
+		target parameter (default 1)
 
 		Returns
 		-------
@@ -126,15 +197,18 @@ class ChampionshipScraper(CoreScraper):
 		seasons = self.__scrap_seasons()
 		seasons = seasons.drop(columns=['endpoint'])
 
-		# Validates chosen season
-		first_year = seasons.index[-1]
-		last_year = seasons.index[0]
-		if target < first_year or target > last_year:
-			raise ValueError(
-				'The \'target\' parameter should be between {0} and {1}'
-				' for this championship.'.format(first_year, last_year))
+		if target is None:
+			return seasons
+		else:
+			# Validates chosen season
+			first_year = seasons.index[-1]
+			last_year = seasons.index[0]
+			if target < first_year or target > last_year:
+				raise ValueError(
+					'The \'target\' parameter should be between {0} and {1}'
+					' for this championship.'.format(first_year, last_year))
 
-		return seasons.loc[target + number - 1:target, :]
+			return seasons.loc[target + number - 1:target, :]
 
 	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'seasons'))
 	def __scrap_seasons(self) -> pd.DataFrame:
@@ -151,7 +225,7 @@ class ChampionshipScraper(CoreScraper):
 		# Fetches
 		try:
 			req = self.session.get(
-				'{0}/campeonato/{1}'.format(self.url, self.endpoint))
+				'{0}/campeonato{1}'.format(self.url, self.endpoint))
 		except Exception as err:
 			raise ScrapediaFetchError(
 				'Futpédia is currently not online.') from err
@@ -211,16 +285,16 @@ class MainScraper(CoreScraper):
 	"""Scraper that provides easy access to common Futpédia's resources like
 	lists of teams, games and championships.
 
-	Methods: status, team, teams, game, games, championship, championships
+	Methods: status, championship, teams, championships
 	"""
-	def __init__(self, base_url: str=BASE_URL, request_retries: int=5,
+	def __init__(self, base_url: str=BASE_URL, request_retries: int=12,
 				 cache_ttl: int=300):
 		"""MainScraper's constructor.
 	
 		Parameters @CoreScraper
 		"""
 		super().__init__(base_url=base_url, request_retries=request_retries,
-						 cache_maxsize=3, cache_ttl=cache_ttl)
+						 cache_maxsize=2, cache_ttl=cache_ttl)
 
 	def status(self) -> bool:
 		"""Verifies if Futpédia is currently online.
