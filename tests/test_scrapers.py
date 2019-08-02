@@ -4,6 +4,7 @@ Classes: MainScraperTests, ChampionshipScraperTests
 """
 
 import unittest
+from datetime import date
 
 import pandas as pd
 
@@ -92,6 +93,36 @@ class ChampionshipScraperTests(unittest.TestCase):
 						status = champ_scraper.status()
 						self.assertIsInstance(status, bool)
 						self.assertTrue(status)
+
+	def test_seasons(self):
+		"""Steps:
+		1 - Instantiates a MainScraper class
+		2 - Retrieves list of championships
+		3 - Instantiates a ChampionshipScraper for each championship
+		4 - Calls seasons() for each and validates response's type and value
+		"""
+		validate = lambda x: x.get('start_date') is not None \
+							 and isinstance(x['start_date'], date) \
+							 and x.get('end_date') is not None \
+							 and isinstance(x['end_date'], date) \
+							 and x.get('number_goals') is not None \
+							 and isinstance(x['number_goals'], int) \
+							 and x.get('number_games') is not None \
+							 and isinstance(x['number_games'], int)
+
+		with scrapers.MainScraper() as scraper:
+			champs = scraper.championships()
+			for i, row in champs.iterrows():
+				with self.subTest(i=row.get('name')):
+					with scraper.championship(i) as champ_scraper:
+						seasons = champ_scraper.seasons()
+						self.assertIsInstance(seasons, pd.DataFrame)
+						self.assertIn('start_date', seasons.columns)
+						self.assertIn('end_date', seasons.columns)
+						self.assertIn('number_goals', seasons.columns)
+						self.assertIn('number_games', seasons.columns)
+						self.assertTrue(all(
+							validate(row) for i, row in seasons.iterrows()))
 
 
 if __name__ == 'main':

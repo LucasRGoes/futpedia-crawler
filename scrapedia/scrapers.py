@@ -244,9 +244,20 @@ class ChampionshipScraper(CoreScraper):
 
 		# Transforms
 		try:
-			stt = raw_seasons.string.find('{"campeonato":')
-			end = raw_seasons.string.find('}]};') + 3
-			raw_seasons = raw_seasons.string[stt:end]
+
+			if self.name == 'Brasileiro Unificado':
+				# For Brasileiro Unificado
+				stt = raw_seasons.string.find('{"edicoes":[')
+				end = raw_seasons.string.find('"}}') + 3
+				raw_seasons = raw_seasons.string[stt:end]
+
+				# print(raw_seasons)
+				
+			else:
+				# For other championships
+				stt = raw_seasons.string.find('{"campeonato":')
+				end = raw_seasons.string.find('}]};') + 3
+				raw_seasons = raw_seasons.string[stt:end]
 
 			indexes = []
 			seasons = []
