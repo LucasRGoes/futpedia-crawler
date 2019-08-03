@@ -48,3 +48,7 @@ Changelog
 * __07-31-2019__:
 	* Created test for ChampionshipScraper.seasons();
 	* Solved bug at ChampionshipScraper.\_\_scrap_seasons() where the content for Brasileiro Unificado could not be transformed as the other pages;
+
+* __08-03-2019__:
+	* Created test for ChampionshipScraper.season();
+	* Created test for SeasonScraper.status();
