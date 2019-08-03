@@ -11,6 +11,9 @@ from scrapedia import scrapers
 from scrapedia.errors import ScrapediaNotFoundError
 
 
+REQUEST_RETRIES = 5
+
+
 class MainScraperTests(unittest.TestCase):
 	"""Set of unit tests for validating an instance of MainScraper.
 
@@ -21,7 +24,7 @@ class MainScraperTests(unittest.TestCase):
 		1 - Instantiates a MainScraper class with a mock URL
 		2 - Calls status() and validates response's type and value
 		"""
-		with scrapers.MainScraper() as scraper:
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
 			status = scraper.status()
 			self.assertIsInstance(status, bool)
 			self.assertTrue(status)
@@ -33,7 +36,7 @@ class MainScraperTests(unittest.TestCase):
 		3 - Calls championship(-1) and verify if error is raised
 		3 - Calls championship(999) and verify if error is raised
 		"""
-		with scrapers.MainScraper() as scraper:
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
 			champ_scraper = scraper.championship(0)
 			self.assertIsInstance(champ_scraper, scrapers.ChampionshipScraper)
 
@@ -51,7 +54,7 @@ class MainScraperTests(unittest.TestCase):
 		validate = lambda x: x.get('name') is not None \
 							 and isinstance(x['name'], str)
 
-		with scrapers.MainScraper() as scraper:
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
 			teams = scraper.teams()
 			self.assertIsInstance(teams, pd.DataFrame)
 			self.assertIn('name', teams.columns)
@@ -65,7 +68,7 @@ class MainScraperTests(unittest.TestCase):
 		validate = lambda x: x.get('name') is not None \
 							 and isinstance(x['name'], str)
 
-		with scrapers.MainScraper() as scraper:
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
 			champs = scraper.championships()
 			self.assertIsInstance(champs, pd.DataFrame)
 			self.assertIn('name', champs.columns)
@@ -84,9 +87,8 @@ class ChampionshipScraperTests(unittest.TestCase):
 		3 - Instantiates a ChampionshipScraper for each championship
 		4 - Calls status() for each and validates response's type and value
 		"""
-		with scrapers.MainScraper() as scraper:
-			champs = scraper.championships()
-			for i, row in champs.iterrows():
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
+			for i, row in scraper.championships().iterrows():
 				with self.subTest(i=row.get('name')):
 					with scraper.championship(i) as champ_scraper:
 						status = champ_scraper.status()
@@ -101,9 +103,8 @@ class ChampionshipScraperTests(unittest.TestCase):
 		4 - Calls season() for each and validates response's type
 		5 - Calls season(999) and verify if error is raised
 		"""
-		with scrapers.MainScraper() as scraper:
-			champs = scraper.championships()
-			for i, row in champs.iterrows():
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
+			for i, row in scraper.championships().iterrows():
 				with self.subTest(i=row.get('name')):
 					with scraper.championship(i) as champ_scraper:
 						seasons = champ_scraper.seasons()
@@ -134,9 +135,8 @@ class ChampionshipScraperTests(unittest.TestCase):
 							 and x.get('number_games') is not None \
 							 and isinstance(x['number_games'], float)
 
-		with scrapers.MainScraper() as scraper:
-			champs = scraper.championships()
-			for i, row in champs.iterrows():
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
+			for i, row in scraper.championships().iterrows():
 				with self.subTest(i=row.get('name')):
 					with scraper.championship(i) as champ_scraper:
 						seasons = champ_scraper.seasons()
@@ -169,12 +169,10 @@ class SeasonScraperTests(unittest.TestCase):
 		5 - Instantiates a SeasonScraper for each season
 		4 - Calls status() for each and validates response's type and value
 		"""
-		with scrapers.MainScraper() as scraper:
-			champs = scraper.championships()
-			for i, row in champs.iterrows():
+		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
+			for i, row in scraper.championships().iterrows():
 				with scraper.championship(i) as champ_scraper:
-					seasons = champ_scraper.seasons()
-					for j, row2 in seasons.iterrows():
+					for j, row2 in champ_scraper.seasons().iterrows():
 						with self.subTest(i=(row.get('name'), j)):
 							with champ_scraper.season(j) as season_scraper:
 								status = season_scraper.status()

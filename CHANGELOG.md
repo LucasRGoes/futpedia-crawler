@@ -52,3 +52,6 @@ Changelog
 * __08-03-2019__:
 	* Created test for ChampionshipScraper.season();
 	* Created test for SeasonScraper.status();
+	* Updated season() and championship() to use their parents class request_retries parameter when building new scrapers;
+	* Removed Brasileiro Unificado from championships() options as it would be more difficult to adequate the crawler to it and there are alternatives like getting each of its three championships separately;
+	* Added global parameter to test_scrapers to set the request_retries parameter of the scrapers;

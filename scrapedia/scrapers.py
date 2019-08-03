@@ -51,7 +51,9 @@ class CoreScraper(object):
 		self.session = requests.Session()
 		self.cache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
 
-		retries = Retry(total=request_retries, backoff_factor=1,
+		self.request_retries = request_retries
+
+		retries = Retry(total=self.request_retries, backoff_factor=1,
 						status_forcelist=[403, 404, 502, 503, 504])
 
 		self.session.mount(BASE_PROTOCOL, HTTPAdapter(max_retries=retries))
@@ -100,6 +102,30 @@ class SeasonScraper(CoreScraper):
 
 		except Exception as err:
 			return False
+
+	def games(self):
+		return self.__scrap_games()
+
+	@cachedmethod(lambda self: self.cache, key=partial(hashkey, 'games'))
+	def __scrap_games(self):
+		"""Fetches list of games, parses and transforms it into a data
+		object.
+
+		Returns
+		-------
+		games: pd.DataFrame -- dataframe with the season's games including ...
+		and endpoints
+		"""
+
+		# Fetches
+		try:
+			req = self.session.get(
+				'{0}/campeonato{1}'.format(self.url, self.endpoint))
+		except Exception as err:
+			raise ScrapediaFetchError(
+				'Futpédia is currently not online.') from err
+
+		return req.content
 
 
 class ChampionshipScraper(CoreScraper):
@@ -165,7 +191,7 @@ class ChampionshipScraper(CoreScraper):
 			season = seasons.loc[year, :]
 			return SeasonScraper(
 				year, '{0}{1}'.format(self.endpoint, season['endpoint']),
-				base_url=self.url
+				base_url=self.url, request_retries=self.request_retries
 			)
 
 		except Exception as err:
@@ -245,19 +271,9 @@ class ChampionshipScraper(CoreScraper):
 		# Transforms
 		try:
 
-			if self.name == 'Brasileiro Unificado':
-				# For Brasileiro Unificado
-				stt = raw_seasons.string.find('{"edicoes":[')
-				end = raw_seasons.string.find('"}}') + 3
-				raw_seasons = raw_seasons.string[stt:end]
-
-				# print(raw_seasons)
-				
-			else:
-				# For other championships
-				stt = raw_seasons.string.find('{"campeonato":')
-				end = raw_seasons.string.find('}]};') + 3
-				raw_seasons = raw_seasons.string[stt:end]
+			stt = raw_seasons.string.find('{"campeonato":')
+			end = raw_seasons.string.find('}]};') + 3
+			raw_seasons = raw_seasons.string[stt:end]
 
 			indexes = []
 			seasons = []
@@ -343,7 +359,9 @@ class MainScraper(CoreScraper):
 		try:
 			champ = champs.iloc[id_, :]
 			return ChampionshipScraper(
-				champ['name'], champ['endpoint'], base_url=self.url)
+				champ['name'], champ['endpoint'], base_url=self.url,
+				request_retries=self.request_retries
+			)
 
 		except Exception as err:
 			raise ScrapediaNotFoundError(
@@ -452,8 +470,9 @@ class MainScraper(CoreScraper):
 
 			champs = []
 			for raw_champ in json.loads(raw_champs):
-				champs.append([raw_champ.get('nome'),
-							   '/{0}'.format(raw_champ.get('slug'))])
+				if raw_champ.get('nome') != 'Brasileiro Unificado':
+					champs.append([raw_champ.get('nome'),
+								   '/{0}'.format(raw_champ.get('slug'))])
 
 			return pd.DataFrame(champs, columns=['name', 'endpoint'])
 
