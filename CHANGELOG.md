@@ -55,3 +55,8 @@ Changelog
 	* Updated season() and championship() to use their parents class request_retries parameter when building new scrapers;
 	* Removed Brasileiro Unificado from championships() options as it would be more difficult to adequate the crawler to it and there are alternatives like getting each of its three championships separately;
 	* Added global parameter to test_scrapers to set the request_retries parameter of the scrapers;
+
+* __08-07-2019__:
+	* Started creation of parsing paths for a season's games based on that year's format;
+	* Modified README.md and documentation files to indicate that the project is only a web scraper and not a web crawler; 
+	* Created outline of new project structure;

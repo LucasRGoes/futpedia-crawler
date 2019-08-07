@@ -17,8 +17,8 @@ with open('LICENSE') as f:
 
 setup(
     name=MODULE_NAME,
-    description=('A scraper/crawler used for the extraction of brazilizan'
-                 ' soccer historic data from the webpage futpedia.globo.com'),
+    description=('A scraper used for the extraction of brazilizan soccer'
+                 ' historic data from the webpage futpedia.globo.com'),
     license=license,
     long_description=readme,
     long_description_content_type='text/markdown',

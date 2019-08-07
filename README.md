@@ -1,9 +1,9 @@
-Scrapedia: A scraper/crawler of Futpédia
-========================================
+Scrapedia: A web scraper of Futpédia
+====================================
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-__Scrapedia__ is a crawler specifically designed to extract Brazilian soccer data from [Futpédia](http://futpedia.globo.com/)'s webpage.
+__Scrapedia__ is a scraper specifically designed to extract Brazilian soccer data from [Futpédia](http://futpedia.globo.com/)'s webpage.
 
 This project was motivated by the small amount of open data sources concerning Brazilian soccer and the yearning for learning.
 

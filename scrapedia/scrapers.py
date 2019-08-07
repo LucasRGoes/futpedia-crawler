@@ -125,7 +125,18 @@ class SeasonScraper(CoreScraper):
 			raise ScrapediaFetchError(
 				'Futpédia is currently not online.') from err
 
-		return req.content
+		# Parses
+		soup = BeautifulSoup(req.content, 'html.parser')
+
+		# Searches for HTML with tables
+		raw_games = soup.find_all(name='li', class_='lista-classificacao-jogo')
+
+		if raw_games is None:
+			raise ScrapediaParseError(
+				'Page has been fetched but the expected content was not found'
+				' while parsing.')
+
+		return raw_games
 
 
 class ChampionshipScraper(CoreScraper):
