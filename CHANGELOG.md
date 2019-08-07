@@ -60,3 +60,6 @@ Changelog
 	* Started creation of parsing paths for a season's games based on that year's format;
 	* Modified README.md and documentation files to indicate that the project is only a web scraper and not a web crawler; 
 	* Created outline of new project structure;
+	* Created seekers.py to hold only code concerning searching of raw data at requested pages;
+	* Using pipeline design pattern for new structure;
+	* Created new error class considering new structure;

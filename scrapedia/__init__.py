@@ -1,6 +1,6 @@
 """
-Scrapedia: A scraper/crawler of Futpédia
-========================================
+Scrapedia: A web scraper of Futpédia
+====================================
 
 __license__ =  MIT
 __author__ = 'Lucas Góes'

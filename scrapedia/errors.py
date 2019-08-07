@@ -34,3 +34,8 @@ class ScrapediaTransformError(ScrapediaError):
 class ScrapediaNotFoundError(ScrapediaError):
 	"""To be raised whenever there is an error where a chosen team, game or championship data is not found on the requested or cached data."""
 	pass
+
+
+class ScrapediaSearchError(ScrapediaError):
+	"""To be raised whenever a search stage fails."""
+	pass
