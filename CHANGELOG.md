@@ -63,3 +63,5 @@ Changelog
 	* Created seekers.py to hold only code concerning searching of raw data at requested pages;
 	* Using pipeline design pattern for new structure;
 	* Created new error class considering new structure;
+	* Created models to hold Futpédia's parsed data;
+	* Created parsers.py to hold only code concerning the parsing of raw data obtained from Futpédia's pages;

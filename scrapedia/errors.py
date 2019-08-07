@@ -1,7 +1,6 @@
 """Scrapedia's source of exception classes.
 
-Classes: ScrapediaError, ScrapediaFetchError, ScrapediaParseError,
-ScrapediaTransformError, ScrapediaNotFoundError
+Classes: ScrapediaError, ScrapediaSearchError, ScrapediaParseError
 """
 
 class ScrapediaError(Exception):
@@ -18,13 +17,6 @@ class ScrapediaFetchError(ScrapediaError):
 	pass
 
 
-class ScrapediaParseError(ScrapediaError):
-	"""To be raised whenever an error related to parsing occurs like missing
-	expected content from a fetched page.
-	"""
-	pass
-
-
 class ScrapediaTransformError(ScrapediaError):
 	"""To be raised whenever an error related to the transformation of parsed content occurs.
 	"""
@@ -36,6 +28,13 @@ class ScrapediaNotFoundError(ScrapediaError):
 	pass
 
 
+
+
 class ScrapediaSearchError(ScrapediaError):
-	"""To be raised whenever a search stage fails."""
+	"""To be raised whenever a seeker's method fails."""
+	pass
+
+
+class ScrapediaParseError(ScrapediaError):
+	"""To be raised whenever a parser's method fails."""
 	pass
