@@ -62,6 +62,10 @@ class Pipeline(object):
 		func -- the function to be executed by the stage
 		next_stage -- the stage to be called after the current one ends the
 		execution of its function
+
+		Returns
+		-------
+		result of the next stage
 		"""
 		tmp = (yield)
 		try:
@@ -79,6 +83,10 @@ class Pipeline(object):
 		func -- the function to be executed by the stage
 		next_stage -- the stage to be called after the current one ends the
 		execution of its function
+
+		Returns
+		-------
+		result of the next stage
 		"""
 		tmp = (yield)
 		try:
@@ -94,6 +102,10 @@ class Pipeline(object):
 		Parameters
 		----------
 		func -- the function to be executed by the consumer
+
+		Returns
+		-------
+		result of the function
 		"""
 		tmp = (yield)
 		return func(tmp)

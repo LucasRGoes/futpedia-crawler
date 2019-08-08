@@ -69,3 +69,6 @@ Changelog
 	* Created pipeline internal package to hold any code related to scraping aspects of the project;
 	* Created errors.py for the pipeline internal package;
 	* Created Pipeline class and tests for its methods;
+
+* __08-08-2019__:
+	* Started reorganizing modules;
