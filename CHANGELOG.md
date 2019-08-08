@@ -65,3 +65,7 @@ Changelog
 	* Created new error class considering new structure;
 	* Created models to hold Futpédia's parsed data;
 	* Created parsers.py to hold only code concerning the parsing of raw data obtained from Futpédia's pages;
+	* Added project's architecture;
+	* Created pipeline internal package to hold any code related to scraping aspects of the project;
+	* Created errors.py for the pipeline internal package;
+	* Created Pipeline class and tests for its methods;

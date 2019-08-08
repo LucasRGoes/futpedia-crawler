@@ -14,7 +14,7 @@ python-packages:
 install: system-packages python-packages
 
 unit-tests:
-	python -m unittest tests.test_scrapers -vvv
+	python -m unittest tests.test_pipeline -vvv
 
 integration-tests:
 
