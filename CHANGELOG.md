@@ -76,3 +76,5 @@ Changelog
 	* Created Requester class and tests for its methods;
 	* Completed Requester tests;
 	* Redocumented seekers module and created tests for it;
+	* Completed seekers module tests;
+	* Updated status list of requester module;

@@ -18,14 +18,14 @@ class Seeker(abc.ABC):
 	Methods: search
 	"""
 	@abc.abstractmethod
-	def search(self, content: bytes) -> str:
+	def search(self, content: bytes):
 		"""Searches web page's content for excerpts that hold data of interest.
 
 		Parameters
 		----------
 		content: bytes -- the text to be searched
 
-		Returns: str -- the raw data of interest
+		Returns -- the raw data of interest
 		"""
 		pass
 
@@ -102,7 +102,7 @@ class TeamSeeker(Seeker):
 	def __init__(self):
 		pass
 
-	def search(self, content: bytes) -> str:
+	def search(self, content: bytes) -> list:
 		"""Search web page's content for raw data concerning teams.
 
 		Parameters @Seeker

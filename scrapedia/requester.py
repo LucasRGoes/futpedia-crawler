@@ -16,7 +16,7 @@ BASE_HOST = 'futpedia.globo.com'
 BASE_URL = '{0}{1}'.format(BASE_PROTOCOL, BASE_HOST)
 
 BACKOFF_FACTOR = 1
-STATUS_LIST = [403, 404, 502, 503, 504]
+STATUS_LIST = [403, 404, 500]
 
 
 class FutpediaRequester(object):
