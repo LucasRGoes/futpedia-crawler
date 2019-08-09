@@ -17,8 +17,11 @@ interest to the final stage of the pipeline.
 receives the data of interest and uses it to build a suitable data schema for
 the response.
 
-Classes: Pipeline
+Classes: Pipeline, PipelineFactory
 """
+
+from . import requesters, seekers, parsers, packers
+
 
 class Pipeline(object):
 	"""The Pipeline class follows a Pipeline design pattern proposed by
@@ -59,14 +62,14 @@ class Pipeline(object):
 
 		self._pipeline = producer
 
-	def scrap(self, url: str):
+	def scrap(self, path: str):
 		"""Starts the pipeline, executes each stage and returns the results of
-		the scraping over the web page served by the chosen URL.
+		the scraping over the web page served by the chosen path.
 
 		Returns -- the information of interest scraped from the web page
 		"""
 		try:
-			self._pipeline.send(url)
+			self._pipeline.send(path)
 		except StopIteration as res:
 			self._pipeline.close()
 			return res.value
@@ -121,3 +124,42 @@ class Pipeline(object):
 		"""
 		tmp = (yield)
 		return func(tmp)
+
+
+class PipelineFactory(object):
+	"""A factory to allow easier construction of pipelines.
+
+	Static Methods: build_pipeline
+	"""
+	@staticmethod
+	def build_pipeline(
+		target: str, structure: str, retry_limit: int=10) -> Pipeline:
+		"""Instantiates a Pipeline object based on the chosen target and
+		structure.
+
+		Parameters
+		----------
+		target: str -- the target to obtain the data like championships,
+		teams, seasons, etc...
+		structure: str -- the data structure that the pipeline generates
+		retry_limit: int -- number of maximum retrying of requests on
+		cases where the status code is in a given set (default 10)
+
+		Returns: Pipeline -- the pipeline with the chosen methods
+		"""
+		requester = requesters.FutpediaRequester(retry_limit=retry_limit)
+
+		if target == 'championship':
+			seeker = seekers.ChampionshipSeeker()
+			parser = parsers.ChampionshipParser()
+		elif target == 'season':
+			seeker = seekers.SeasonSeeker()
+			parser = parsers.SeasonParser()
+		else:
+			seeker = seekers.TeamSeeker()
+			parser = parsers.TeamParser()
+
+		packer = packers.DataFramePacker()
+
+		return Pipeline(requester.fetch, seeker.search, parser.parse,
+						packer.pack)

@@ -1,4 +1,4 @@
-"""Collection of unit tests for scrapedia.requester module's classes and
+"""Collection of unit tests for scrapedia.requesters module's classes and
 functions.
 
 Classes: FutpediaRequesterTests
@@ -6,7 +6,7 @@ Classes: FutpediaRequesterTests
 
 import unittest
 
-from scrapedia.requester import FutpediaRequester
+from scrapedia.requesters import FutpediaRequester
 from scrapedia.errors import ScrapediaRequestError
 
 

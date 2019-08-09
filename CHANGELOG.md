@@ -83,3 +83,5 @@ Changelog
 	* Created packers module, its classes and its tests;
 	* Removed ScrapediaPackError as there was no need for it;
 	* Changed retry_limit at test_requester;
+	* Created PipelineFactory to allow easier construction of pipelines;
+	* Renamed requester module to requesters and corrected all of its dependents;

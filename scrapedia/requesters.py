@@ -1,4 +1,4 @@
-"""The requester module holds all classes and functions related to fetching
+"""The requesters module holds all classes and functions related to fetching
 Futpédia's web pages.
 
 Classes: FutpediaRequester
