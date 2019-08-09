@@ -7,6 +7,7 @@ Classes: FutpediaRequesterTests
 import unittest
 
 from scrapedia.requester import FutpediaRequester
+from scrapedia.errors import ScrapediaRequestError
 
 
 class FutpediaRequesterTests(unittest.TestCase):
@@ -27,15 +28,18 @@ class FutpediaRequesterTests(unittest.TestCase):
 			requester.retry_limit = 7
 			self.assertEqual(requester.retry_limit, 7)
 
-
 	def test_fetch(self):
 		"""Steps:
 		1 - Instantiates a FutpediaRequester
-		2 - Uses fetch() and test response type
+		2 - Uses fetch('/') and test response type
+		3 - Uses fetch('/unknown') and verify if it raises error 
 		"""
-		with FutpediaRequester() as requester:
+		with FutpediaRequester(retry_limit=3) as requester:
 			res = requester.fetch('/')
 			self.assertIsInstance(res, bytes)
+
+			with self.assertRaises(ScrapediaRequestError):
+				requester.fetch('/unknown')
 
 
 if __name__ == 'main':

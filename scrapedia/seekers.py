@@ -1,6 +1,4 @@
-"""Scrapedia's seekers are the pipeline's stage where the requested
-information is analyzed and reduced so that only the interesting portions
-remain and are returned.
+"""The seekers module holds all classes and functions related to searching specific excerpts of text on a web page's content.
 
 ABCs: Seeker
 
@@ -20,22 +18,20 @@ class Seeker(abc.ABC):
 	Methods: search
 	"""
 	@abc.abstractmethod
-	def search(self, txt: str) -> str:
-		"""Search text for raw data.
+	def search(self, content: bytes) -> str:
+		"""Searches web page's content for excerpts that hold data of interest.
 
 		Parameters
 		----------
-		txt: str -- the text to be searched
+		content: bytes -- the text to be searched
 
-		Returns
-		-------
-		raw_data: str -- the raw data of interest
+		Returns: str -- the raw data of interest
 		"""
 		pass
 
 
 class ChampionshipSeeker(Seeker):
-	"""A seeker class specialized in finding data about championships.
+	"""A seeker class specialized in finding data concerning championships.
 
 	Extends: Seeker
 
@@ -44,13 +40,13 @@ class ChampionshipSeeker(Seeker):
 	def __init__(self):
 		pass
 
-	def search(self, txt: str) -> str:
-		"""Search text for raw data concerning championships.
+	def search(self, content: bytes) -> str:
+		"""Search web page's content for raw data concerning championships.
 
 		Parameters @Seeker
 		Returns @Seeker
 		"""
-		soup = BeautifulSoup(txt, 'html.parser')
+		soup = BeautifulSoup(content, 'html.parser')
 		raw_data = soup.find(name='script', attrs={'type': 'text/javascript',
 												   'language': 'javascript',
 												   'charset': 'utf-8'})
@@ -64,7 +60,7 @@ class ChampionshipSeeker(Seeker):
 
 
 class SeasonSeeker(Seeker):
-	"""A seeker class specialized in finding data about a championship's
+	"""A seeker class specialized in finding data concerning a championship's
 	seasons.
 
 	Extends: Seeker
@@ -74,13 +70,14 @@ class SeasonSeeker(Seeker):
 	def __init__(self):
 		pass
 
-	def search(self, txt: str) -> str:
-		"""Search text for raw data concerning a championship's seasons.
+	def search(self, content: bytes) -> str:
+		"""Search web page's content for raw data concerning a championship's
+		seasons.
 
 		Parameters @Seeker
 		Returns @Seeker
 		"""
-		soup = BeautifulSoup(txt, 'html.parser')
+		soup = BeautifulSoup(content, 'html.parser')
 		raw_data = soup.find(
 			'script',
 			string=lambda s: s is not None and s.find('static_host') != -1
@@ -96,7 +93,7 @@ class SeasonSeeker(Seeker):
 
 
 class TeamSeeker(Seeker):
-	"""A seeker class specialized in finding data about teams.
+	"""A seeker class specialized in finding data concerning teams.
 
 	Extends: Seeker
 
@@ -105,13 +102,13 @@ class TeamSeeker(Seeker):
 	def __init__(self):
 		pass
 
-	def search(self, txt: str) -> str:
-		"""Search text for raw data concerning teams.
+	def search(self, content: bytes) -> str:
+		"""Search web page's content for raw data concerning teams.
 
 		Parameters @Seeker
 		Returns @Seeker
 		"""
-		soup = BeautifulSoup(txt, 'html.parser')
+		soup = BeautifulSoup(content, 'html.parser')
 		raw_data = soup.find_all(name='li',
 								 attrs={'itemprop': 'itemListElement'})
 

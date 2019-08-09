@@ -63,9 +63,7 @@ class Pipeline(object):
 		"""Starts the pipeline, executes each stage and returns the results of
 		the scraping over the web page served by the chosen URL.
 
-		Returns
-		-------
-		the information of interest scraped from the web page
+		Returns -- the information of interest scraped from the web page
 		"""
 		try:
 			self._pipeline.send(url)
@@ -83,9 +81,7 @@ class Pipeline(object):
 		next_stage -- the stage to be called after the current one ends the
 		execution of its function
 
-		Returns
-		-------
-		result of the next stage
+		Returns -- result of the next stage
 		"""
 		tmp = (yield)
 		try:
@@ -104,9 +100,7 @@ class Pipeline(object):
 		next_stage -- the stage to be called after the current one ends the
 		execution of its function
 
-		Returns
-		-------
-		result of the next stage
+		Returns -- result of the next stage
 		"""
 		tmp = (yield)
 		try:
@@ -123,9 +117,7 @@ class Pipeline(object):
 		----------
 		func -- the function to be executed by the consumer
 
-		Returns
-		-------
-		result of the function
+		Returns -- result of the function
 		"""
 		tmp = (yield)
 		return func(tmp)

@@ -74,3 +74,5 @@ Changelog
 	* Started reorganizing modules;
 	* Added errors for each possible stage of a scraping pipeline;
 	* Created Requester class and tests for its methods;
+	* Completed Requester tests;
+	* Redocumented seekers module and created tests for it;
