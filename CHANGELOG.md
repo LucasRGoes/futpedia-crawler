@@ -80,3 +80,6 @@ Changelog
 	* Updated status list of requester module;
 	* Created SeasonParser and TeamParser at parsers module;
 	* Created tests for parsers module;
+	* Created packers module, its classes and its tests;
+	* Removed ScrapediaPackError as there was no need for it;
+	* Changed retry_limit at test_requester;

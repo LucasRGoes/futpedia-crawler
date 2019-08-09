@@ -1,7 +1,7 @@
 """Source of exception classes for Scrapedia's pipelines.
 
 Classes: ScrapediaError, ScrapediaRequestError, ScrapediaSearchError,
-ScrapediaParseError, ScrapediaPackageError
+ScrapediaParseError
 """
 
 class ScrapediaError(Exception):
@@ -27,10 +27,4 @@ class ScrapediaSearchError(Exception):
 class ScrapediaParseError(Exception):
 	"""Error to be raised whenever a parser fails to parse the text or when
 	the expected data is not found."""
-	pass
-
-
-class ScrapediaPackageError(Exception):
-	"""Error to be raised whenever a packerfails to build its data structure
-	with the web page's data."""
 	pass

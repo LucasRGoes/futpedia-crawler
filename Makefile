@@ -14,7 +14,7 @@ python-packages:
 install: system-packages python-packages
 
 unit-tests:
-	python -m unittest tests.test_pipeline tests.test_requester tests.test_seekers tests.test_parsers -vvv
+	python -m unittest tests.test_pipeline tests.test_requester tests.test_seekers tests.test_parsers tests.test_packers -vvv
 
 integration-tests:
 

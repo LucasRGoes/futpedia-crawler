@@ -70,6 +70,9 @@ class FutpediaRequester(object):
 		else:
 			self._retry_limit = new_value
 
+			self._session.close()
+
+			self._session = requests.Session()
 			self._retries = Retry(total=self._retry_limit,
 								  backoff_factor=BACKOFF_FACTOR,
 							  	  status_forcelist=STATUS_LIST)
