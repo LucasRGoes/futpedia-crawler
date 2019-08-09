@@ -78,3 +78,5 @@ Changelog
 	* Redocumented seekers module and created tests for it;
 	* Completed seekers module tests;
 	* Updated status list of requester module;
+	* Created SeasonParser and TeamParser at parsers module;
+	* Created tests for parsers module;

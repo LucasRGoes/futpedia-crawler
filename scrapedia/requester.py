@@ -90,5 +90,5 @@ class FutpediaRequester(object):
 		except Exception as err:
 			raise ScrapediaRequestError(
 				'Futpédia\'s chosen web page couldn\'t be accessed, try again'
-				' later'
-			) from err
+				' later: {0}'.format(err)
+			)

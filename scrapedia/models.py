@@ -6,13 +6,12 @@ NamedTuples: Championship, Season, Team
 import collections
 
 
-Championship = collections.namedtuple('Championship', ['uid', 'name',
-													   'endpoint'])
+Championship = collections.namedtuple('Championship', ['uid', 'name', 'path'])
 
 
 Season = collections.namedtuple('Season', ['year', 'start_date', 'end_date',
 										   'number_goals', 'number_games',
-										   'endpoint'])
+										   'path'])
 
 
-Team = collections.namedtuple('Team', ['uid', 'name', 'endpoint'])
+Team = collections.namedtuple('Team', ['uid', 'name', 'path'])
