@@ -1,6 +1,7 @@
-"""Scrapedia's source of exception classes.
+"""Source of exception classes for Scrapedia's pipelines.
 
-Classes: ScrapediaError, ScrapediaSearchError, ScrapediaParseError
+Classes: ScrapediaError, ScrapediaRequestError, ScrapediaSearchError,
+ScrapediaParseError, ScrapediaPackageError
 """
 
 class ScrapediaError(Exception):
@@ -10,31 +11,26 @@ class ScrapediaError(Exception):
 	pass
 
 
-class ScrapediaFetchError(ScrapediaError):
-	"""To be raised whenever an error concerning HTTP requests of Futpédia's
-	webpages occurs.
+class ScrapediaRequestError(Exception):
+	"""Error to be raised whenever a requester fails when trying to fetch a
+	web page.
 	"""
 	pass
 
 
-class ScrapediaTransformError(ScrapediaError):
-	"""To be raised whenever an error related to the transformation of parsed content occurs.
-	"""
+class ScrapediaSearchError(Exception):
+	"""Error to be raised whenever a seeker fails to find the expected excerpt
+	of text on the web page's content."""
 	pass
 
 
-class ScrapediaNotFoundError(ScrapediaError):
-	"""To be raised whenever there is an error where a chosen team, game or championship data is not found on the requested or cached data."""
+class ScrapediaParseError(Exception):
+	"""Error to be raised whenever a parser fails to parse the text or when
+	the expected data is not found."""
 	pass
 
 
-
-
-class ScrapediaSearchError(ScrapediaError):
-	"""To be raised whenever a seeker's method fails."""
-	pass
-
-
-class ScrapediaParseError(ScrapediaError):
-	"""To be raised whenever a parser's method fails."""
+class ScrapediaPackageError(Exception):
+	"""Error to be raised whenever a packerfails to build its data structure
+	with the web page's data."""
 	pass

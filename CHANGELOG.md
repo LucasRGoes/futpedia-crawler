@@ -72,3 +72,5 @@ Changelog
 
 * __08-08-2019__:
 	* Started reorganizing modules;
+	* Added errors for each possible stage of a scraping pipeline;
+	* Created Requester class and tests for its methods;

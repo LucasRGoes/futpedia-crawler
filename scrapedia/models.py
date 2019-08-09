@@ -1,4 +1,4 @@
-"""The models that hold data concerning Futpédia's available information.
+"""The models that hold data concerning Futpédia's available data.
 
 NamedTuples: Championship, Season, Team
 """

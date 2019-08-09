@@ -14,7 +14,7 @@ python-packages:
 install: system-packages python-packages
 
 unit-tests:
-	python -m unittest tests.test_pipeline -vvv
+	python -m unittest tests.test_pipeline tests.test_requester -vvv
 
 integration-tests:
 

@@ -1,5 +1,4 @@
-"""Collection of unit tests for scrapedia.pipeline internal package and its
-pipeline module.
+"""Collection of unit tests for scrapedia.pipeline module's classes and functions.
 
 Classes: PipelineTests
 """
