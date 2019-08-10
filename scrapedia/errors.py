@@ -20,11 +20,13 @@ class ScrapediaRequestError(Exception):
 
 class ScrapediaSearchError(Exception):
 	"""Error to be raised whenever a seeker fails to find the expected excerpt
-	of text on the web page's content."""
+	of text on the web page's content.
+	"""
 	pass
 
 
 class ScrapediaParseError(Exception):
 	"""Error to be raised whenever a parser fails to parse the text or when
-	the expected data is not found."""
+	the expected data is not found.
+	"""
 	pass

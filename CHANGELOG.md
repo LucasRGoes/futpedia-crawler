@@ -85,3 +85,9 @@ Changelog
 	* Changed retry_limit at test_requester;
 	* Created PipelineFactory to allow easier construction of pipelines;
 	* Renamed requester module to requesters and corrected all of its dependents;
+
+* __08-10-2019__:
+	* Created new scrapers module using the old one as base;
+	* Added caching logic to packers;
+	* Added more pydocs to modules seekers and parsers;
+	* Removed getters and setters from requesters.FutpediaRequester as there is no need for them;

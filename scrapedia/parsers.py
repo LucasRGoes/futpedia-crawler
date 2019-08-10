@@ -1,5 +1,5 @@
 """The parsers module holds all classes and functions related to parsing raw
-data and creating models with the data of interest.
+data and creating models with the information extracted from them.
 
 ABCs: Parser
 
@@ -28,7 +28,7 @@ class Parser(abc.ABC):
 		----------
 		raw_data: str -- raw data to be parsed
 
-		Returns: list -- list with the data of interest
+		Returns: list -- list with the information of interest
 		"""
 		pass
 
@@ -41,6 +41,7 @@ class ChampionshipParser(Parser):
 	Methods: parse
 	"""
 	def __init__(self):
+		"""ChampionshipParser's constructor."""
 		pass
 
 	def parse(self, raw_data: str) -> list:
@@ -83,6 +84,7 @@ class SeasonParser(Parser):
 	Methods: parse
 	"""
 	def __init__(self):
+		"""SeasonParser's constructor."""
 		pass
 
 	def parse(self, raw_data: str) -> list:
@@ -132,6 +134,7 @@ class TeamParser(Parser):
 	Methods: parse
 	"""
 	def __init__(self):
+		"""TeamParser's constructor."""
 		pass
 
 	def parse(self, raw_data: list) -> list:

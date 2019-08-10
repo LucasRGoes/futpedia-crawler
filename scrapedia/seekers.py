@@ -1,4 +1,4 @@
-"""The seekers module holds all classes and functions related to searching specific excerpts of text on a web page's content.
+"""The seekers module holds all classes and functions related to searching specific excerpts of text on a web page's HTML file.
 
 ABCs: Seeker
 
@@ -23,9 +23,9 @@ class Seeker(abc.ABC):
 
 		Parameters
 		----------
-		content: bytes -- the text to be searched
+		content: bytes -- the raw HTML text to be searched
 
-		Returns -- the raw data of interest
+		Returns -- the raw data that holds the information to be extracted
 		"""
 		pass
 
@@ -38,6 +38,7 @@ class ChampionshipSeeker(Seeker):
 	Methods: search
 	"""
 	def __init__(self):
+		"""ChampionshipSeeker's constructor."""
 		pass
 
 	def search(self, content: bytes) -> str:
@@ -68,6 +69,7 @@ class SeasonSeeker(Seeker):
 	Methods: search
 	"""
 	def __init__(self):
+		"""SeasonSeeker's constructor."""
 		pass
 
 	def search(self, content: bytes) -> str:
@@ -100,6 +102,7 @@ class TeamSeeker(Seeker):
 	Methods: search
 	"""
 	def __init__(self):
+		"""TeamSeeker's constructor."""
 		pass
 
 	def search(self, content: bytes) -> list:
