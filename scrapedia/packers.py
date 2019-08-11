@@ -19,25 +19,25 @@ class Packer(abc.ABC):
 
 	Methods: pack
 	"""
-	def __init__(self, cache_maxsize: int=1, cache_ttl: int=300):
+	def __init__(self, cache_maxsize: int=10, cache_ttl: int=300):
 		"""Packer's constructor.
 
 		Parameters
 		----------
 		cache_maxsize: int -- maximum number of objects to be stored
-		simultaneously on the internal cache (default 1)
+		simultaneously on the internal cache (default 10)
 		cache_ttl: int -- time to live in seconds for internal caching of
 		data (default 300)
 		"""
 		self._cache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
 
 	@abc.abstractmethod
-	def pack(self, models: list):
+	def pack(self, models: tuple):
 		"""Builds a data structure out of a list of model's.
 
 		Parameters
 		----------
-		model: list -- the model list with the data
+		model: tuple -- the model list with the data
 
 		Returns -- the data structure with the data
 		"""
@@ -51,7 +51,7 @@ class DataFramePacker(Packer):
 
 	Methods: pack
 	"""
-	def __init__(self, cache_maxsize: int=1, cache_ttl: int=300):
+	def __init__(self, cache_maxsize: int=10, cache_ttl: int=300):
 		"""DataFramePacker's constructor.
 
 		Parameters @Packer
@@ -59,7 +59,7 @@ class DataFramePacker(Packer):
 		super().__init__(cache_maxsize=cache_maxsize, cache_ttl=cache_ttl)
 
 	@cachedmethod(lambda self: self._cache, key=partial(hashkey, 'storage'))
-	def pack(self, models: list) -> pd.DataFrame:
+	def pack(self, models: tuple) -> pd.DataFrame:
 		"""Builds a data frame out of a list of model's.
 
 		Parameters @Packer

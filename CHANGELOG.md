@@ -91,3 +91,7 @@ Changelog
 	* Added caching logic to packers;
 	* Added more pydocs to modules seekers and parsers;
 	* Removed getters and setters from requesters.FutpediaRequester as there is no need for them;
+
+* __08-11-2019__:
+	* Corrected bug with the packers where the cached method could not receive a list as a parameter. Changed it to a tuple as the parameters need to be immutable;
+	*  Changed default number of values at cache from 1 to 10;

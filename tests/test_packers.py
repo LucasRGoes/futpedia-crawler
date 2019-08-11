@@ -12,8 +12,8 @@ import scrapedia.models as models
 import scrapedia.packers as packers
 
 
-MOCK_CHAMP_MODEL = [models.Championship(
-	0, 'Campeonato Brasileiro', '/campeonato/campeonato-brasileiro')]
+MOCK_CHAMP_MODEL = (models.Championship(
+	0, 'Campeonato Brasileiro', '/campeonato/campeonato-brasileiro'), )
 
 
 class DataFramePackerTests(unittest.TestCase):
