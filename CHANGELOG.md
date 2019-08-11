@@ -100,3 +100,6 @@ Changelog
 	* Changed FutpediaRequester to create a new session on each request;
 	* Created tests for PipelineFactory;
 	* Changed Pipeline to accepts both methods and functions;
+	* Created new MainScraper now as RootScraper using the new pattern;
+	* Created tests for RootScraper. They are considered integration tests as they use all of the other modules;
+	* Corrected parsers and their tests to build tuples instead of lists;

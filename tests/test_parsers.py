@@ -49,7 +49,7 @@ class ChampionshipParserTests(unittest.TestCase):
 		"""
 		parser = parsers.ChampionshipParser()
 		res = parser.parse(MOCK_CHAMP_RAW_DATA)
-		self.assertIsInstance(res, list)
+		self.assertIsInstance(res, tuple)
 		self.assertEqual(len(res), 1)
 		self.assertEqual(type(res[0]).__name__, 'Championship')
 
@@ -75,7 +75,7 @@ class SeasonParserTests(unittest.TestCase):
 		"""
 		parser = parsers.SeasonParser()
 		res = parser.parse(MOCK_SEASON_RAW_DATA)
-		self.assertIsInstance(res, list)
+		self.assertIsInstance(res, tuple)
 		self.assertEqual(len(res), 1)
 		self.assertEqual(type(res[0]).__name__, 'Season')
 
@@ -104,7 +104,7 @@ class TeamParserTests(unittest.TestCase):
 		"""
 		parser = parsers.TeamParser()
 		res = parser.parse(MOCK_TEAM_RAW_DATA)
-		self.assertIsInstance(res, list)
+		self.assertIsInstance(res, tuple)
 		self.assertEqual(len(res), 2)
 		self.assertEqual(type(res[0]).__name__, 'Team')
 		self.assertEqual(type(res[1]).__name__, 'Team')

@@ -21,14 +21,14 @@ class Parser(abc.ABC):
 	Methods: parse
 	"""
 	@abc.abstractmethod
-	def parse(self, raw_data: str) -> list:
-		"""Parses raw data into a list of models.
+	def parse(self, raw_data: str) -> tuple:
+		"""Parses raw data into a tuple of models.
 
 		Parameters
 		----------
 		raw_data: str -- raw data to be parsed
 
-		Returns: list -- list with the information of interest
+		Returns: tuple -- tuple with the information of interest
 		"""
 		pass
 
@@ -44,8 +44,8 @@ class ChampionshipParser(Parser):
 		"""ChampionshipParser's constructor."""
 		pass
 
-	def parse(self, raw_data: str) -> list:
-		"""Parses raw data into a list of Championship models.
+	def parse(self, raw_data: str) -> tuple:
+		"""Parses raw data into a tuple of Championship models.
 
 		Parameters @Parser
 		Returns @Parser
@@ -66,7 +66,7 @@ class ChampionshipParser(Parser):
 				)
 				models.append(champ)
 
-			return models
+			return tuple(models)
 
 		except Exception as err:
 			raise ScrapediaParseError(
@@ -87,8 +87,8 @@ class SeasonParser(Parser):
 		"""SeasonParser's constructor."""
 		pass
 
-	def parse(self, raw_data: str) -> list:
-		"""Parses raw data into a list of Season models.
+	def parse(self, raw_data: str) -> tuple:
+		"""Parses raw data into a tuple of Season models.
 
 		Parameters @Parser
 		Returns @Parser
@@ -117,7 +117,7 @@ class SeasonParser(Parser):
 
 				models.append(season)
 
-			return models
+			return tuple(models)
 
 		except Exception as err:
 			raise ScrapediaParseError(
@@ -137,8 +137,8 @@ class TeamParser(Parser):
 		"""TeamParser's constructor."""
 		pass
 
-	def parse(self, raw_data: list) -> list:
-		"""Parses raw data into a list of Team models.
+	def parse(self, raw_data: list) -> tuple:
+		"""Parses raw data into a tuple of Team models.
 
 		Parameters @Parser
 		Returns @Parser
@@ -151,7 +151,7 @@ class TeamParser(Parser):
 				team = Team(idx, raw_team.string, raw_team.a.get('href'))
 				models.append(team)
 
-			return models
+			return tuple(models)
 
 		except Exception as err:
 			raise ScrapediaParseError(

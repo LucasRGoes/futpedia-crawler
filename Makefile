@@ -17,6 +17,7 @@ unit-tests:
 	python -m unittest tests.test_requesters tests.test_seekers tests.test_parsers tests.test_packers tests.test_pipeline -vvv
 
 integration-tests:
+	python -m unittest tests.test_scrapers -vvv
 
 tests: unit-tests integration-tests
 
