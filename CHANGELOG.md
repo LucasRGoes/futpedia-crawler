@@ -103,3 +103,8 @@ Changelog
 	* Created new MainScraper now as RootScraper using the new pattern;
 	* Created tests for RootScraper. They are considered integration tests as they use all of the other modules;
 	* Corrected parsers and their tests to build tuples instead of lists;
+	* Recreated ChampionshipScraper using new pattern;
+	* Created tests for the new ChampionshipScraper;
+	* Recreated method at RootScraper for an easy ChampionshipScraper access;
+	* Added setUp method to the scrapers tests;
+	* Added rewind pipeline method to Pipeline to allow reusage of the same Pipeline;

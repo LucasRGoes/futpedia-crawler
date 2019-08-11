@@ -51,6 +51,17 @@ class Pipeline(object):
 				   or type(x).__name__ == 'method' for x in args):
 			raise ValueError('all arguments should be functions')
 
+		self._args = args
+
+		# This method can be used to create the pipeline too.
+		self.__rewind_pipeline()
+
+	def __rewind_pipeline(self):
+		"""A private function that rewinds the pipeline by recreating the used
+		generators allowing it to be used again.
+		"""
+		args = self._args
+
 		consumer = Pipeline.create_consumer(args[-1])
 		next(consumer)
 
@@ -75,6 +86,7 @@ class Pipeline(object):
 			self._pipeline.send(path)
 		except StopIteration as res:
 			self._pipeline.close()
+			self.__rewind_pipeline()
 			return res.value
 
 	@staticmethod

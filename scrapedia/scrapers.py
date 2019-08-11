@@ -29,11 +29,54 @@ class Scraper(object):
 		cache_ttl: int -- time to live in seconds for internal caching of
 		data (default 300)
 		"""
+		self.structure = structure
+		self.retry_limit = retry_limit
+		self.backoff_factor = backoff_factor
+		self.cache_maxsize = cache_maxsize
+		self.cache_ttl = cache_ttl
+
 		self._pipeline_factory = PipelineFactory(
 			structure=structure, retry_limit=retry_limit,
 			backoff_factor=backoff_factor, cache_maxsize=cache_maxsize,
 			cache_ttl=cache_ttl
 		)
+
+
+class ChampionshipScraper(Scraper):
+	"""Scraper that provides an interface to obtain data related to specific
+	championships.
+
+	Methods: season, seasons
+	"""
+	def __init__(self, path: str,
+				 structure: DataStructure=DataStructure.DATA_FRAME,
+				 retry_limit: int=10, backoff_factor: int=1,
+				 cache_maxsize: int=10, cache_ttl: int=300):
+		"""ChampionshipScraper's constructor.
+	
+		Parameters
+		----------
+		path: str -- path of the championship's web page
+		Other parameters @scrapers.Scraper
+		"""
+		self.path = path
+
+		super().__init__(
+			structure=structure, retry_limit=retry_limit,
+			backoff_factor=backoff_factor, cache_maxsize=cache_maxsize,
+			cache_ttl=cache_ttl
+		)
+
+		self.seasons_pipeline = self._pipeline_factory.build('seasons')
+
+	def seasons(self):
+		"""Returns a data structure containing the championship's seasons and
+		their metadata.
+
+		Returns -- seasons's years, start date, end date, number of goals and
+		number of games
+		"""
+		return self.seasons_pipeline.scrap(self.path)
 
 
 class RootScraper(Scraper):
@@ -59,35 +102,32 @@ class RootScraper(Scraper):
 		self._champs_pipeline = self._pipeline_factory.build('championships')
 		self._teams_pipeline = self._pipeline_factory.build('teams')
 
-	# def championship(self, id_: int) -> ChampionshipScraper:
-	# 	"""Factory to return an instance of a ChampionshipScraper class based
-	# 	on the chosen championship id using cached or requested data.
+	def championship(self, id_: int) -> ChampionshipScraper:
+		"""An easy access to build a new ChampionshipScraper using its ID.
 
-	# 	Parameters
-	# 	----------
-	# 	id_: int -- id of the championship to have a scraper built
+		Returns: ChampionshipScraper -- scraper built targeting the chosen
+		championship web page
+		"""
+		if id_ < 0:
+			raise ValueError(
+				'The \'id_\' parameter should be higher or equal to 0.')
 
-	# 	Returns
-	# 	-------
-	# 	scraper: ChampionshipScraper -- scraper built targeting the chosen
-	# 	championship webpage
-	# 	"""
-	# 	if id_ < 0:
-	# 		raise ValueError(
-	# 			'The \'id_\' parameter should be higher or equal to 0.')
+		champs = self.championships()
 
-	# 	champs = self.__scrap_championships()
+		try:
+			champ = champs.iloc[id_, :]
+			return ChampionshipScraper(
+				champ.get('path'), structure=self.structure,
+				retry_limit=self.retry_limit,
+				backoff_factor=self.backoff_factor,
+				cache_maxsize=self.cache_maxsize, cache_ttl=self.cache_ttl
+			)
 
-	# 	try:
-	# 		champ = champs.iloc[id_, :]
-	# 		return ChampionshipScraper(
-	# 			champ['name'], champ['endpoint'], base_url=self.url,
-	# 			request_retries=self.request_retries
-	# 		)
-
-	# 	except Exception as err:
-	# 		raise ScrapediaNotFoundError(
-	# 			'The chosen id could not be found.') from err
+		except Exception as err:
+			raise ValueError(
+				'The chosen id could not be found at the list of'
+				' championships.'
+			)
 
 	def championships(self):
 		"""Returns a data structure containing Futpédia's championships and
