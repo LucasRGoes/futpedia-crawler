@@ -17,12 +17,22 @@ interest to the final stage of the pipeline.
 receives the data of interest and uses it to build a suitable data schema for
 the response.
 
+Enums: DataStructure
+
 Classes: Pipeline, PipelineFactory
 """
 
 from enum import Enum
+from functools import partial
+
+from cachetools.keys import hashkey
+from cachetools import cachedmethod, TTLCache
 
 from . import requesters, seekers, parsers, packers
+
+
+class DataStructure(Enum):
+	DATA_FRAME = 1
 
 
 class Pipeline(object):
@@ -35,13 +45,17 @@ class Pipeline(object):
 
 	Static Methods: create_producer, create_stage, create_consumer
 	"""
-	def __init__(self, *args):
+	def __init__(self, *args, cache_maxsize: int=10, cache_ttl: int=300):
 		"""Pipeline's constructor. It iterates over the arguments to build the
 		pipeline using the chosen functions.
 
 		Parameters
 		----------
 		*args -- a list of functions used to build the pipeline
+		cache_maxsize: int -- maximum number of objects to be stored
+		simultaneously on the internal cache (default 10)
+		cache_ttl: int -- time to live in seconds for internal caching of
+		data (default 300)
 		"""
 		if len(args) < 3:
 			raise ValueError(
@@ -52,6 +66,7 @@ class Pipeline(object):
 			raise ValueError('all arguments should be functions')
 
 		self._args = args
+		self._cache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
 
 		# This method can be used to create the pipeline too.
 		self.__rewind_pipeline()
@@ -76,6 +91,7 @@ class Pipeline(object):
 
 		self._pipeline = producer
 
+	@cachedmethod(lambda self: self._cache, key=partial(hashkey, 'storage'))
 	def scrap(self, path: str):
 		"""Starts the pipeline, executes each stage and returns the results of
 		the scraping over the web page served by the chosen path.
@@ -141,10 +157,6 @@ class Pipeline(object):
 		return func(tmp)
 
 
-class DataStructure(Enum):
-	DATA_FRAME = 1
-
-
 class PipelineFactory(object):
 	"""A factory to allow easier construction of pipelines.
 
@@ -200,8 +212,9 @@ class PipelineFactory(object):
 		requester = requesters.FutpediaRequester(
 			retry_limit=self.retry_limit, backoff_factor=self.backoff_factor)
 
-		packer = packers.DataFramePacker(
-			cache_maxsize=self.cache_maxsize, cache_ttl=self.cache_ttl)
+		packer = packers.DataFramePacker()
 
-		return Pipeline(requester.fetch, seeker.search, parser.parse,
-						packer.pack)
+		return Pipeline(
+			requester.fetch, seeker.search, parser.parse, packer.pack,
+			cache_maxsize=self.cache_maxsize, cache_ttl=self.cache_ttl
+		)

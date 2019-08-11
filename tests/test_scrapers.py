@@ -97,7 +97,7 @@ class ChampionshipScraperTests(unittest.TestCase):
 							 and isinstance(x['path'], str)
 
 		for i in range(len(self.scraper.championships().index)):
-			champ_scraper = self.scraper.championship(0)
+			champ_scraper = self.scraper.championship(i)
 			seasons = champ_scraper.seasons()
 
 			self.assertIsInstance(seasons, pd.DataFrame)

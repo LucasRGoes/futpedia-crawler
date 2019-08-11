@@ -108,3 +108,5 @@ Changelog
 	* Recreated method at RootScraper for an easy ChampionshipScraper access;
 	* Added setUp method to the scrapers tests;
 	* Added rewind pipeline method to Pipeline to allow reusage of the same Pipeline;
+	* Removed cache usage from packers and added it to Pipeline;
+	* Corrected ChampionshipScraperTests.test_seasons where the index used when fetching the seasons was fixed;
