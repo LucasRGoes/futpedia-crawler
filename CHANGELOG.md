@@ -98,3 +98,5 @@ Changelog
 	* Created enumeration to use on PipelineFactory to decide the data structure to be built by its pipelines;
 	* Changed PipelineFactory to have a constructor with the parameters to use on its pipelines;
 	* Changed FutpediaRequester to create a new session on each request;
+	* Created tests for PipelineFactory;
+	* Changed Pipeline to accepts both methods and functions;

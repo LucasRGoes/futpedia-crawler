@@ -47,7 +47,8 @@ class Pipeline(object):
 			raise ValueError(
 				'the minimum number of arguments to build a pipeline is 3')
 
-		if not all(type(x).__name__ == 'function' for x in args):
+		if not all(type(x).__name__ == 'function'
+				   or type(x).__name__ == 'method' for x in args):
 			raise ValueError('all arguments should be functions')
 
 		consumer = Pipeline.create_consumer(args[-1])
@@ -163,7 +164,7 @@ class PipelineFactory(object):
 		self.cache_maxsize = cache_maxsize
 		self.cache_ttl = cache_ttl
 
-	def build(target: str) -> Pipeline:
+	def build(self, target: str) -> Pipeline:
 		"""Instantiates a Pipeline object for the chosen target that can be championships, seasons, teams and so forth.
 
 		Returns: Pipeline -- the pipeline built using the components

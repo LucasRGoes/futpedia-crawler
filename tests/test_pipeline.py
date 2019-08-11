@@ -1,11 +1,11 @@
 """Collection of unit tests for scrapedia.pipeline module's classes and functions.
 
-Classes: PipelineTests
+Classes: PipelineTests, PipelineFactoryTests
 """
 
 import unittest
 
-from scrapedia.pipeline import Pipeline
+from scrapedia.pipeline import Pipeline, PipelineFactory
 
 
 def mock_function(number):
@@ -90,6 +90,26 @@ class PipelineTests(unittest.TestCase):
 			consumer.send(1)
 		except StopIteration as res:
 			self.assertEqual(res.value, 2)
+
+
+class PipelineFactoryTests(unittest.TestCase):
+	"""Set of unit tests to validate an instance of a PipelineFactory and its
+	methods.
+
+	Tests: test_build
+	"""
+	def test_build(self):
+		"""Steps:
+		1 - Instantiates a PipelineFactory
+		2 - Use build('championships') and verify the resulting Pipeline
+		3 - Use build('unknown') and verify if it raises an error
+		"""
+		factory = PipelineFactory()
+		pipeline = factory.build('championships')
+		self.assertIsInstance(pipeline, Pipeline)
+
+		with self.assertRaises(ValueError):
+			factory.build('unknown')
 
 
 if __name__ == 'main':
