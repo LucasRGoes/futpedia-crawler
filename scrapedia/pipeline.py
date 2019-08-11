@@ -20,6 +20,8 @@ the response.
 Classes: Pipeline, PipelineFactory
 """
 
+from enum import Enum
+
 from . import requesters, seekers, parsers, packers
 
 
@@ -126,40 +128,67 @@ class Pipeline(object):
 		return func(tmp)
 
 
+class DataStructure(Enum):
+	DATA_FRAME = 1
+
+
 class PipelineFactory(object):
 	"""A factory to allow easier construction of pipelines.
 
-	Static Methods: build_pipeline
+	Methods: build_pipeline
 	"""
-	@staticmethod
-	def build_pipeline(
-		target: str, structure: str, retry_limit: int=10) -> Pipeline:
-		"""Instantiates a Pipeline object based on the chosen target and
-		structure.
+	def __init__(self, structure: DataStructure=DataStructure.DATA_FRAME,
+				 retry_limit: int=10, backoff_factor: int=1,
+				 cache_maxsize: int=10, cache_ttl: int=300):
+		"""PipelineFactory's constructor. These parameters are used on the
+		construction of the pipelines.
 
 		Parameters
 		----------
-		target: str -- the target to obtain the data like championships,
-		teams, seasons, etc...
-		structure: str -- the data structure that the pipeline generates
+		structure: DataStructure -- the data structure built at the end of the
+		pipeline (default DataStructure.DATA_FRAME)
 		retry_limit: int -- number of maximum retrying of requests on
 		cases where the status code is in a given set (default 10)
-
-		Returns: Pipeline -- the pipeline with the chosen methods
+		backoff_factor: int -- the number in seconds that serves as the wait
+		time between failed requests, getting bigger on each failure
+		(default 1)
+		cache_maxsize: int -- maximum number of objects to be stored
+		simultaneously on the internal cache (default 10)
+		cache_ttl: int -- time to live in seconds for internal caching of
+		data (default 300)
 		"""
-		requester = requesters.FutpediaRequester(retry_limit=retry_limit)
+		self.structure = structure
+		self.retry_limit = retry_limit
+		self.backoff_factor = backoff_factor
+		self.cache_maxsize = cache_maxsize
+		self.cache_ttl = cache_ttl
 
-		if target == 'championship':
+	def build(target: str) -> Pipeline:
+		"""Instantiates a Pipeline object for the chosen target that can be championships, seasons, teams and so forth.
+
+		Returns: Pipeline -- the pipeline built using the components
+		associated with the chosen target
+		"""
+		if target == 'championships':
 			seeker = seekers.ChampionshipSeeker()
 			parser = parsers.ChampionshipParser()
-		elif target == 'season':
+		elif target == 'seasons':
 			seeker = seekers.SeasonSeeker()
 			parser = parsers.SeasonParser()
-		else:
+		elif target == 'teams':
 			seeker = seekers.TeamSeeker()
 			parser = parsers.TeamParser()
+		else:
+			raise ValueError(
+				'The target parameter should be one of championships, seasons'
+				' or teams.'
+			)
 
-		packer = packers.DataFramePacker()
+		requester = requesters.FutpediaRequester(
+			retry_limit=self.retry_limit, backoff_factor=self.backoff_factor)
+
+		packer = packers.DataFramePacker(
+			cache_maxsize=self.cache_maxsize, cache_ttl=self.cache_ttl)
 
 		return Pipeline(requester.fetch, seeker.search, parser.parse,
 						packer.pack)

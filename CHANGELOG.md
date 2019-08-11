@@ -94,4 +94,7 @@ Changelog
 
 * __08-11-2019__:
 	* Corrected bug with the packers where the cached method could not receive a list as a parameter. Changed it to a tuple as the parameters need to be immutable;
-	*  Changed default number of values at cache from 1 to 10;
+	* Changed default number of values at cache from 1 to 10;
+	* Created enumeration to use on PipelineFactory to decide the data structure to be built by its pipelines;
+	* Changed PipelineFactory to have a constructor with the parameters to use on its pipelines;
+	* Changed FutpediaRequester to create a new session on each request;

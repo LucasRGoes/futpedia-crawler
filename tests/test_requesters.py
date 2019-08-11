@@ -22,13 +22,13 @@ class FutpediaRequesterTests(unittest.TestCase):
 		2 - Uses fetch('/') and test response type
 		3 - Uses fetch('/unknown') and verify if it raises error 
 		"""
-		with FutpediaRequester(retry_limit=5) as requester:
-			res = requester.fetch('/')
-			self.assertIsInstance(res, bytes)
+		requester = FutpediaRequester(retry_limit=5)
+		res = requester.fetch('/')
+		self.assertIsInstance(res, bytes)
 
-		with FutpediaRequester(retry_limit=1) as requester:
-			with self.assertRaises(ScrapediaRequestError):
-				requester.fetch('/unknown')
+		requester = FutpediaRequester(retry_limit=1)
+		with self.assertRaises(ScrapediaRequestError):
+			requester.fetch('/unknown')
 
 
 if __name__ == 'main':
