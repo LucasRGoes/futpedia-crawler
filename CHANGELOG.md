@@ -110,3 +110,6 @@ Changelog
 	* Added rewind pipeline method to Pipeline to allow reusage of the same Pipeline;
 	* Removed cache usage from packers and added it to Pipeline;
 	* Corrected ChampionshipScraperTests.test_seasons where the index used when fetching the seasons was fixed;
+
+* __08-12-2019__:
+	* Updated test_scrapers.ChampionshipScraperTests.test_seasons to use a random sampling of 10% of the championships and use subTests;

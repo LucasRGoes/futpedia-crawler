@@ -82,8 +82,8 @@ class ChampionshipScraperTests(unittest.TestCase):
 
 	def test_seasons(self):
 		"""Steps:
-		1 - Instantiates a ChampionshipScraper for each championship
-		2 - Uses seasons() and verify response
+		1 - Instantiates a ChampionshipScraper for 10% of the championships
+		2 - Uses seasons() on each and verify response
 		"""
 		validate = lambda x: x.get('start_date') is not None \
 							 and isinstance(x['start_date'], float) \
@@ -96,18 +96,19 @@ class ChampionshipScraperTests(unittest.TestCase):
 							 and x.get('path') is not None \
 							 and isinstance(x['path'], str)
 
-		for i in range(len(self.scraper.championships().index)):
-			champ_scraper = self.scraper.championship(i)
-			seasons = champ_scraper.seasons()
+		for i, row in self.scraper.championships().sample(frac=.1).iterrows():
+			with self.subTest(i=row.get('name')):
+				champ_scraper = self.scraper.championship(i)
+				seasons = champ_scraper.seasons()
 
-			self.assertIsInstance(seasons, pd.DataFrame)
-			self.assertIn('start_date', seasons.columns)
-			self.assertIn('end_date', seasons.columns)
-			self.assertIn('number_goals', seasons.columns)
-			self.assertIn('number_games', seasons.columns)
-			self.assertIn('path', seasons.columns)
-			self.assertTrue(all(
-				validate(row) for i, row in seasons.iterrows()))
+				self.assertIsInstance(seasons, pd.DataFrame)
+				self.assertIn('start_date', seasons.columns)
+				self.assertIn('end_date', seasons.columns)
+				self.assertIn('number_goals', seasons.columns)
+				self.assertIn('number_games', seasons.columns)
+				self.assertIn('path', seasons.columns)
+				self.assertTrue(all(
+					validate(row) for i, row in seasons.iterrows()))
 
 
 if __name__ == 'main':
