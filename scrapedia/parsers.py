@@ -3,7 +3,7 @@ data and creating models with the information extracted from them.
 
 ABCs: Parser
 
-Classes: ChampionshipParser, SeasonParser, TeamParser
+Classes: ChampionshipParser, GameParser, SeasonParser, TeamParser
 """
 
 import abc
@@ -73,6 +73,38 @@ class ChampionshipParser(Parser):
 				'The championships raw data could not be parsed: {0}' \
 				.format(err)
 			)
+
+
+class GameParser(Parser):
+	"""A parser class specialized in parsing raw data concerning games.
+
+	Extends: Parser
+
+	Methods: parse
+	"""
+	def __init__(self):
+		"""GameParser's constructor."""
+		pass
+
+	def parse(self, raw_data: str) -> tuple:
+		"""Parses raw data into a tuple of Team models.
+
+		Parameters @Parser
+		Returns @Parser
+		"""
+		try:
+
+			models = []
+
+			for idx, raw_team in enumerate(raw_data):
+				team = Team(idx, raw_team.string, raw_team.a.get('href'))
+				models.append(team)
+
+			return tuple(models)
+
+		except Exception as err:
+			raise ScrapediaParseError(
+				'The teams raw data could not be parsed: {0}'.format(err))
 
 
 class SeasonParser(Parser):

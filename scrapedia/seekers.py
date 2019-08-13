@@ -2,7 +2,7 @@
 
 ABCs: Seeker
 
-Classes: ChampionshipSeeker, SeasonSeeker, TeamSeeker
+Classes: ChampionshipSeeker, GameSeeker, SeasonSeeker, TeamSeeker
 """
 
 import abc
@@ -57,6 +57,38 @@ class ChampionshipSeeker(Seeker):
 
 		stt = raw_data.string.find('[{')
 		end = raw_data.string.find('}]') + 2
+		return raw_data.string[stt:end]
+
+
+class GameSeeker(Seeker):
+	"""A seeker class specialized in finding data concerning a season's games.
+
+	Extends: Seeker
+
+	Methods: search
+	"""
+	def __init__(self):
+		"""GameSeeker's constructor."""
+		pass
+
+	def search(self, content: bytes) -> str:
+		"""Search web page's content for raw data concerning a season's games.
+
+		Parameters @Seeker
+		Returns @Seeker
+		"""
+		soup = BeautifulSoup(content, 'html.parser')
+		raw_data = soup.find(
+			'script',
+			string=lambda s: s is not None and s.find('static_host') != -1
+		)
+
+		if raw_data is None:
+			raise ScrapediaSearchError('The expected championship\'s seasons'
+									   ' raw data could not be found.')
+
+		stt = raw_data.string.find('{"campeonato":')
+		end = raw_data.string.find('}]};') + 3
 		return raw_data.string[stt:end]
 
 

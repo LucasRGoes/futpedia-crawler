@@ -69,6 +69,14 @@ class SeasonScraper(Scraper):
 
 		self.games_pipeline = self._pipeline_factory.build('games')
 
+	def games(self):
+		"""Returns a data structure containing the season's games and their
+		metadata.
+
+		Returns -- games's ... (todo: list of parameters)
+		"""
+		return self.games_pipeline.scrap(self.path)
+
 
 class ChampionshipScraper(Scraper):
 	"""Scraper that provides an interface to obtain data related to specific

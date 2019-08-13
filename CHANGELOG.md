@@ -116,3 +116,4 @@ Changelog
 	* Recreated SeasonScraper;
 	* Created ChampionshipScraper.season() method and its tests;
 	* Turned private rewind_pipeline() method from Pipeline into a static method to create a new pipeline in each scrap() call;
+	* Created initial version of a GamePipeline's generators;
