@@ -203,6 +203,9 @@ class PipelineFactory(object):
 		elif target == 'teams':
 			seeker = seekers.TeamSeeker()
 			parser = parsers.TeamParser()
+		elif target == 'games':
+			seeker = seekers.TeamSeeker()
+			parser = parsers.TeamParser()
 		else:
 			raise ValueError(
 				'The target parameter should be one of championships, seasons'

@@ -74,11 +74,27 @@ class ChampionshipScraperTests(unittest.TestCase):
 	"""Set of unit tests to validate an instance of a ChampionshipScraper and
 	its methods.
 
-	Tests: test_seasons
+	Tests: test_season, test_seasons
 	"""
 	def setUp(self):
 		"""Instantiates a RootScraper."""
 		self.scraper = scrapers.RootScraper()
+
+	def test_season(self):
+		"""Steps:
+		1 - Uses season(2010) and verify response
+		2 - Uses season(-1) and verify if it raises error
+		3 - Uses season(999) and verify if it raises error
+		"""
+		champ_scraper = self.scraper.championship(0)
+		season_scraper = champ_scraper.season(2010)
+		self.assertIsInstance(season_scraper, scrapers.SeasonScraper)
+
+		with self.assertRaises(ValueError):
+			champ_scraper.season(-1)
+
+		with self.assertRaises(ValueError):
+			champ_scraper.season(999)
 
 	def test_seasons(self):
 		"""Steps:

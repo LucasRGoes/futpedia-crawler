@@ -48,7 +48,7 @@ class SeasonScraper(Scraper):
 
 	Methods: game, games
 	"""
-	def __init__(self, championship_path: str, path: str,
+	def __init__(self, path: str,
 				 structure: DataStructure=DataStructure.DATA_FRAME,
 				 retry_limit: int=10, backoff_factor: int=1,
 				 cache_maxsize: int=10, cache_ttl: int=300):
@@ -56,11 +56,10 @@ class SeasonScraper(Scraper):
 	
 		Parameters
 		----------
-		championship_path: str -- path of the championship used to append the season's path
 		path: str -- path of the season's web page
 		Other parameters @scrapers.Scraper
 		"""
-		self.path = '{0}{1}'.format(championship_path, path)
+		self.path = path
 
 		super().__init__(
 			structure=structure, retry_limit=retry_limit,
@@ -97,6 +96,34 @@ class ChampionshipScraper(Scraper):
 		)
 
 		self.seasons_pipeline = self._pipeline_factory.build('seasons')
+
+	def season(self, year: int):
+		"""An easy access to build a new SeasonScraper using its year.
+
+		Returns: SeasonScraper -- scraper built targeting the chosen
+		season's web page
+		"""
+		if year < 0:
+			raise ValueError(
+				'The \'year\' parameter should be higher or equal to 0.')
+
+		seasons = self.seasons()
+
+		try:
+			season = seasons.loc[year, :]
+			return SeasonScraper(
+				'{0}{1}'.format(self.path, season.get('path')),
+				structure=self.structure,
+				retry_limit=self.retry_limit,
+				backoff_factor=self.backoff_factor,
+				cache_maxsize=self.cache_maxsize, cache_ttl=self.cache_ttl
+			)
+
+		except Exception as err:
+			raise ValueError(
+				'The chosen year could not be found at the list of'
+				' seasons.'
+			)
 
 	def seasons(self):
 		"""Returns a data structure containing the championship's seasons and
@@ -135,7 +162,7 @@ class RootScraper(Scraper):
 		"""An easy access to build a new ChampionshipScraper using its ID.
 
 		Returns: ChampionshipScraper -- scraper built targeting the chosen
-		championship web page
+		championship's web page
 		"""
 		if id_ < 0:
 			raise ValueError(
