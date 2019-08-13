@@ -19,7 +19,7 @@ class RootScraperTests(unittest.TestCase):
 	"""
 	def setUp(self):
 		"""Instantiates a RootScraper."""
-		self.scraper = scrapers.RootScraper()
+		self.scraper = scrapers.RootScraper(retry_limit=5)
 
 	def test_championship(self):
 		"""Steps:
@@ -78,7 +78,7 @@ class ChampionshipScraperTests(unittest.TestCase):
 	"""
 	def setUp(self):
 		"""Instantiates a RootScraper."""
-		self.scraper = scrapers.RootScraper()
+		self.scraper = scrapers.RootScraper(retry_limit=5)
 
 	def test_season(self):
 		"""Steps:

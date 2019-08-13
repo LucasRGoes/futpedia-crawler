@@ -115,3 +115,4 @@ Changelog
 	* Updated test_scrapers.ChampionshipScraperTests.test_seasons to use a random sampling of 10% of the championships and use subTests;
 	* Recreated SeasonScraper;
 	* Created ChampionshipScraper.season() method and its tests;
+	* Turned private rewind_pipeline() method from Pipeline into a static method to create a new pipeline in each scrap() call;

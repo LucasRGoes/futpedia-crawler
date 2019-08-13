@@ -41,17 +41,18 @@ class Pipeline(object):
 	a producer, a series of stages and a consumer that are used together to
 	scrap a web page.
 
-	Methods: start
+	Methods: scrap
 
-	Static Methods: create_producer, create_stage, create_consumer
+	Static Methods: create_pipeline, create_producer, create_stage,
+	create_consumer
 	"""
 	def __init__(self, *args, cache_maxsize: int=10, cache_ttl: int=300):
 		"""Pipeline's constructor. It iterates over the arguments to build the
-		pipeline using the chosen functions.
+		pipeline using the chosen generators.
 
 		Parameters
 		----------
-		*args -- a list of functions used to build the pipeline
+		*args -- a list of generators used to build the pipeline
 		cache_maxsize: int -- maximum number of objects to be stored
 		simultaneously on the internal cache (default 10)
 		cache_ttl: int -- time to live in seconds for internal caching of
@@ -63,20 +64,35 @@ class Pipeline(object):
 
 		if not all(type(x).__name__ == 'function'
 				   or type(x).__name__ == 'method' for x in args):
-			raise ValueError('all arguments should be functions')
+			raise ValueError('all arguments should be functions or methods')
 
 		self._args = args
 		self._cache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
 
-		# This method can be used to create the pipeline too.
-		self.__rewind_pipeline()
+	@cachedmethod(lambda self: self._cache, key=partial(hashkey, 'storage'))
+	def scrap(self, path: str):
+		"""Creates and starts the pipeline, executes each stage and returns
+		the results of the scraping over the web page served by the chosen
+		path.
 
-	def __rewind_pipeline(self):
-		"""A private function that rewinds the pipeline by recreating the used
-		generators allowing it to be used again.
+		Returns -- the information of interest scraped from the web page
 		"""
-		args = self._args
+		try:
+			pipeline = Pipeline.create_pipeline(*self._args)
+			pipeline.send(path)
+		except StopIteration as res:
+			pipeline.close()
+			return res.value
 
+	@staticmethod
+	def create_pipeline(*args):
+		"""A private function that creates the pipeline using the given
+		generators.
+
+		Parameters
+		----------
+		*args -- a list of generators used to build the pipeline
+		"""
 		consumer = Pipeline.create_consumer(args[-1])
 		next(consumer)
 
@@ -89,21 +105,7 @@ class Pipeline(object):
 		producer = Pipeline.create_producer(args[0], temp)
 		next(producer)
 
-		self._pipeline = producer
-
-	@cachedmethod(lambda self: self._cache, key=partial(hashkey, 'storage'))
-	def scrap(self, path: str):
-		"""Starts the pipeline, executes each stage and returns the results of
-		the scraping over the web page served by the chosen path.
-
-		Returns -- the information of interest scraped from the web page
-		"""
-		try:
-			self._pipeline.send(path)
-		except StopIteration as res:
-			self._pipeline.close()
-			self.__rewind_pipeline()
-			return res.value
+		return producer
 
 	@staticmethod
 	def create_producer(func, next_stage):
