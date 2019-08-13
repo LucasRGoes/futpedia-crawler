@@ -191,7 +191,8 @@ class PipelineFactory(object):
 		self.cache_ttl = cache_ttl
 
 	def build(self, target: str) -> Pipeline:
-		"""Instantiates a Pipeline object for the chosen target that can be championships, seasons, teams and so forth.
+		"""Instantiates a Pipeline object for the chosen target that can be
+		championships, seasons, teams and so forth.
 
 		Returns: Pipeline -- the pipeline built using the components
 		associated with the chosen target
@@ -199,19 +200,19 @@ class PipelineFactory(object):
 		if target == 'championships':
 			seeker = seekers.ChampionshipSeeker()
 			parser = parsers.ChampionshipParser()
+		elif target == 'games':
+			seeker = seekers.GameSeeker()
+			parser = parsers.GameParser()
 		elif target == 'seasons':
 			seeker = seekers.SeasonSeeker()
 			parser = parsers.SeasonParser()
 		elif target == 'teams':
 			seeker = seekers.TeamSeeker()
 			parser = parsers.TeamParser()
-		elif target == 'games':
-			seeker = seekers.TeamSeeker()
-			parser = parsers.TeamParser()
 		else:
 			raise ValueError(
-				'The target parameter should be one of championships, seasons'
-				' or teams.'
+				'The target parameter should be one of championships, games,'
+				' seasons or teams.'
 			)
 
 		requester = requesters.FutpediaRequester(

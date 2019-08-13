@@ -78,18 +78,17 @@ class GameSeeker(Seeker):
 		Returns @Seeker
 		"""
 		soup = BeautifulSoup(content, 'html.parser')
-		raw_data = soup.find(
-			'script',
-			string=lambda s: s is not None and s.find('static_host') != -1
-		)
 
-		if raw_data is None:
-			raise ScrapediaSearchError('The expected championship\'s seasons'
-									   ' raw data could not be found.')
+		# Searches for HTML with tables
+		raw_games = soup.find_all(name='li', class_='lista-classificacao-jogo')
 
-		stt = raw_data.string.find('{"campeonato":')
-		end = raw_data.string.find('}]};') + 3
-		return raw_data.string[stt:end]
+		if raw_games is None:
+			raise ScrapediaParseError('The expected season\'s games raw data'
+									  ' could not be found.')
+
+		print(raw_games)
+
+		return raw_games
 
 
 class SeasonSeeker(Seeker):

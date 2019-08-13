@@ -87,24 +87,12 @@ class GameParser(Parser):
 		pass
 
 	def parse(self, raw_data: str) -> tuple:
-		"""Parses raw data into a tuple of Team models.
+		"""Parses raw data into a tuple of Game models.
 
 		Parameters @Parser
 		Returns @Parser
 		"""
-		try:
-
-			models = []
-
-			for idx, raw_team in enumerate(raw_data):
-				team = Team(idx, raw_team.string, raw_team.a.get('href'))
-				models.append(team)
-
-			return tuple(models)
-
-		except Exception as err:
-			raise ScrapediaParseError(
-				'The teams raw data could not be parsed: {0}'.format(err))
+		return (Game(1), )
 
 
 class SeasonParser(Parser):

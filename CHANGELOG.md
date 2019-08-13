@@ -117,3 +117,5 @@ Changelog
 	* Created ChampionshipScraper.season() method and its tests;
 	* Turned private rewind_pipeline() method from Pipeline into a static method to create a new pipeline in each scrap() call;
 	* Created initial version of a GamePipeline's generators;
+	* Deleted scrapers_bkp.py as all of its classes were migrated to the new pattern;
+	* Created tests for initial version of a GamePipeline to debug the class;

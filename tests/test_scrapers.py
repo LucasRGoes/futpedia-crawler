@@ -1,7 +1,7 @@
 """Collection of unit tests for scrapedia.scrapers module's classes and
 functions.
 
-Classes: RootScraperTests, ChampionshipScraperTests
+Classes: RootScraperTests, ChampionshipScraperTests, SeasonsScraperTests
 """
 
 import unittest
@@ -125,6 +125,23 @@ class ChampionshipScraperTests(unittest.TestCase):
 				self.assertIn('path', seasons.columns)
 				self.assertTrue(all(
 					validate(row) for i, row in seasons.iterrows()))
+
+
+class SeasonsScraperTests(unittest.TestCase):
+	"""Set of unit tests to validate an instance of a SeasonScraper and its
+	methods.
+
+	Tests: test_game, test_games
+	"""
+	def setUp(self):
+		"""Instantiates a RootScraper."""
+		self.scraper = scrapers.RootScraper(retry_limit=5)
+
+	def test_game(self):
+		pass
+
+	def test_games(self):
+		pass
 
 
 if __name__ == 'main':
