@@ -1,7 +1,7 @@
 """Scrapedia's collection of scraper classes for fetching and parsing
 Futpédia's soccer data and returning it as more easily accessible objects.
 
-Classes: Scraper, RootScraper
+Classes: Scraper, SeasonScraper, ChampionshipScraper, RootScraper
 """
 
 from .pipeline import DataStructure, PipelineFactory
@@ -40,6 +40,35 @@ class Scraper(object):
 			backoff_factor=backoff_factor, cache_maxsize=cache_maxsize,
 			cache_ttl=cache_ttl
 		)
+
+
+class SeasonScraper(Scraper):
+	"""Scraper that provides an interface to obtain data related to specific
+	seasons of a championship.
+
+	Methods: game, games
+	"""
+	def __init__(self, championship_path: str, path: str,
+				 structure: DataStructure=DataStructure.DATA_FRAME,
+				 retry_limit: int=10, backoff_factor: int=1,
+				 cache_maxsize: int=10, cache_ttl: int=300):
+		"""SeasonScraper's constructor.
+	
+		Parameters
+		----------
+		championship_path: str -- path of the championship used to append the season's path
+		path: str -- path of the season's web page
+		Other parameters @scrapers.Scraper
+		"""
+		self.path = '{0}{1}'.format(championship_path, path)
+
+		super().__init__(
+			structure=structure, retry_limit=retry_limit,
+			backoff_factor=backoff_factor, cache_maxsize=cache_maxsize,
+			cache_ttl=cache_ttl
+		)
+
+		self.games_pipeline = self._pipeline_factory.build('games')
 
 
 class ChampionshipScraper(Scraper):

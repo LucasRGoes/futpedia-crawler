@@ -113,3 +113,4 @@ Changelog
 
 * __08-12-2019__:
 	* Updated test_scrapers.ChampionshipScraperTests.test_seasons to use a random sampling of 10% of the championships and use subTests;
+	* Recreated SeasonScraper;
