@@ -119,3 +119,4 @@ Changelog
 	* Created initial version of a GamePipeline's generators;
 	* Deleted scrapers_bkp.py as all of its classes were migrated to the new pattern;
 	* Created tests for initial version of a GamePipeline to debug the class;
+	* Updated GamePipeline to work with one type of game web page;

@@ -79,16 +79,34 @@ class GameSeeker(Seeker):
 		"""
 		soup = BeautifulSoup(content, 'html.parser')
 
-		# Searches for HTML with tables
-		raw_games = soup.find_all(name='li', class_='lista-classificacao-jogo')
+		if soup.find(name='table', id='tabela-jogos'):
+			# Used on Campeonato Brasileiro, seasons 2016 and 2017.
+			raw_data = soup.find(
+				'script',
+				string=lambda s: s is not None and s.find('JOGOS:') != -1
+			)
 
-		if raw_games is None:
-			raise ScrapediaParseError('The expected season\'s games raw data'
+			stt = raw_data.string.find('JOGOS:') + 7
+			end = raw_data.string.find('}],') + 2
+			raw_games = raw_data.string[stt:end]
+
+			stt = raw_data.string.find('EQUIPES:') + 9
+			end = raw_data.string.find('}},') + 2
+			raw_teams = raw_data.string[stt:end]
+
+			raw_data = {'raw_games': raw_games, 'raw_teams': raw_teams}
+		else:
+			raw_data = None
+
+		# Searches for HTML with tables
+		# raw_games = soup.find_all(name='li',
+		# class_='lista-classificacao-jogo')
+
+		if raw_data is None:
+			raise ScrapediaSearchError('The expected season\'s games raw data'
 									  ' could not be found.')
 
-		print(raw_games)
-
-		return raw_games
+		return raw_data
 
 
 class SeasonSeeker(Seeker):

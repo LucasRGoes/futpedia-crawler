@@ -73,7 +73,8 @@ class SeasonScraper(Scraper):
 		"""Returns a data structure containing the season's games and their
 		metadata.
 
-		Returns -- games's ... (todo: list of parameters)
+		Returns -- games's home teams, home goals, away goals, away teams,
+		stadiums, rounds, dates and paths
 		"""
 		return self.games_pipeline.scrap(self.path)
 

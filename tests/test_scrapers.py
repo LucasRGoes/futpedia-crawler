@@ -138,7 +138,19 @@ class SeasonsScraperTests(unittest.TestCase):
 		self.scraper = scrapers.RootScraper(retry_limit=5)
 
 	def test_game(self):
+		"""Steps:
+		1 - Instantiates a ChampionshipScraper for 10% of the championships
+		2 - Instantiates using each ChampionshipScraper a SeasonScraper for
+		10% of the seasons
+		2 - Uses games() on each and verify response
+		"""
 		pass
+		# for i, row_c in self.scraper.championships().sample(frac=.1) \
+		# 											.iterrows():
+		# 	champ_scraper = self.scraper.championship(i)
+		# 	for j, row_s in champ_scraper.seasons().sample(frac=.1).iterrows():
+		# 		with self.subTest(i=(row_c.get('name'), j)):
+		# 			season_scraper = champ_scraper.season(j)
 
 	def test_games(self):
 		pass
@@ -146,83 +158,3 @@ class SeasonsScraperTests(unittest.TestCase):
 
 if __name__ == 'main':
 	unittest.main()
-
-
-# class ChampionshipScraperTests(unittest.TestCase):
-# 	"""Set of unit tests for validating an instance of ChampionshipScraper.
-
-# 	Tests: test_status, test_season, test_seasons
-# 	"""
-# 	def test_status(self):
-# 		"""Steps:
-# 		1 - Instantiates a MainScraper class
-# 		2 - Retrieves list of championships
-# 		3 - Instantiates a ChampionshipScraper for each championship
-# 		4 - Calls status() for each and validates response's type and value
-# 		"""
-# 		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
-# 			for i, row in scraper.championships().iterrows():
-# 				with self.subTest(i=row.get('name')):
-# 					with scraper.championship(i) as champ_scraper:
-# 						status = champ_scraper.status()
-# 						self.assertIsInstance(status, bool)
-# 						self.assertTrue(status)
-
-# 	def test_season(self):
-# 		"""Steps:
-# 		1 - Instantiates a MainScraper class
-# 		2 - Retrieves list of championships
-# 		3 - Instantiates a ChampionshipScraper for each championship
-# 		4 - Calls season() for each and validates response's type
-# 		5 - Calls season(999) and verify if error is raised
-# 		"""
-# 		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
-# 			for i, row in scraper.championships().iterrows():
-# 				with self.subTest(i=row.get('name')):
-# 					with scraper.championship(i) as champ_scraper:
-# 						seasons = champ_scraper.seasons()
-# 						seasons = [i for i, row in seasons.iterrows()]
-# 						season_scraper = champ_scraper.season(seasons[0])
-
-# 						self.assertIsInstance(season_scraper,
-# 											  scrapers.SeasonScraper)
-
-# 						with self.assertRaises(ValueError):
-# 							champ_scraper.season(999)
-
-# 	def test_seasons(self):
-# 		"""Steps:
-# 		1 - Instantiates a MainScraper class
-# 		2 - Retrieves list of championships
-# 		3 - Instantiates a ChampionshipScraper for each championship
-# 		4 - Calls seasons() for each and validates response's type and value
-# 		5 - Calls seasons(number=-1) and verify if error is raised
-# 		6 - Calls seasons(target=999) and verify if error is raised
-# 		"""
-# 		validate = lambda x: x.get('start_date') is not None \
-# 							 and isinstance(x['start_date'], float) \
-# 							 and x.get('end_date') is not None \
-# 							 and isinstance(x['end_date'], float) \
-# 							 and x.get('number_goals') is not None \
-# 							 and isinstance(x['number_goals'], float) \
-# 							 and x.get('number_games') is not None \
-# 							 and isinstance(x['number_games'], float)
-
-# 		with scrapers.MainScraper(request_retries=REQUEST_RETRIES) as scraper:
-# 			for i, row in scraper.championships().iterrows():
-# 				with self.subTest(i=row.get('name')):
-# 					with scraper.championship(i) as champ_scraper:
-# 						seasons = champ_scraper.seasons()
-# 						self.assertIsInstance(seasons, pd.DataFrame)
-# 						self.assertIn('start_date', seasons.columns)
-# 						self.assertIn('end_date', seasons.columns)
-# 						self.assertIn('number_goals', seasons.columns)
-# 						self.assertIn('number_games', seasons.columns)
-# 						self.assertTrue(all(
-# 							validate(row) for i, row in seasons.iterrows()))
-
-# 						with self.assertRaises(ValueError):
-# 							champ_scraper.seasons(number=-1)
-
-# 						with self.assertRaises(ValueError):
-# 							champ_scraper.seasons(target=999)

@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 from .errors import ScrapediaParseError
-from .models import Championship, Season, Team
+from .models import Championship, Game, Season, Team
 
 
 class Parser(abc.ABC):
@@ -92,7 +92,40 @@ class GameParser(Parser):
 		Parameters @Parser
 		Returns @Parser
 		"""
-		return (Game(1), )
+		try:
+
+			models = []
+
+			raw_games = json.loads(raw_data['raw_games'])
+			raw_teams = json.loads(raw_data['raw_teams'])
+
+			for idx, raw_game in enumerate(raw_games):
+
+				home_team = raw_teams[str(raw_game['mand'])]['nome_popular']
+				away_team = raw_teams[str(raw_game['vis'])]['nome_popular']
+
+				home_goals = raw_game['golm']
+				away_goals = raw_game['golv']
+
+				stadium = raw_game['sede']
+				round_ = raw_game['rod']
+				path = raw_game['url']
+
+				date = datetime.strptime(
+					'{0} {1}'.format(raw_game['dt'], raw_game['hr']),
+									 '%d/%m/%Y %Hh%M'
+				)
+				date = time.mktime(date.timetuple()) * 1000
+
+				game = Game(idx, home_team, home_goals, away_goals, away_team,
+						    stadium, round_, date, path)
+				models.append(game)
+
+			return tuple(models)
+
+		except Exception as err:
+			raise ScrapediaParseError(
+				'The teams raw data could not be parsed: {0}'.format(err))
 
 
 class SeasonParser(Parser):
