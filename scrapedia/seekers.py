@@ -18,14 +18,15 @@ class Seeker(abc.ABC):
 	Methods: search
 	"""
 	@abc.abstractmethod
-	def search(self, content: bytes):
+	def search(self, content: bytes) -> dict:
 		"""Searches web page's content for excerpts that hold data of interest.
 
 		Parameters
 		----------
 		content: bytes -- the raw HTML text to be searched
 
-		Returns -- the raw data that holds the information to be extracted
+		Returns: dict -- the raw data that holds the information to be
+		extracted
 		"""
 		pass
 
@@ -41,7 +42,7 @@ class ChampionshipSeeker(Seeker):
 		"""ChampionshipSeeker's constructor."""
 		pass
 
-	def search(self, content: bytes) -> str:
+	def search(self, content: bytes) -> dict:
 		"""Search web page's content for raw data concerning championships.
 
 		Parameters @Seeker
@@ -57,7 +58,8 @@ class ChampionshipSeeker(Seeker):
 
 		stt = raw_data.string.find('[{')
 		end = raw_data.string.find('}]') + 2
-		return raw_data.string[stt:end]
+
+		return {'content': raw_data.string[stt:end]}
 
 
 class GameSeeker(Seeker):
@@ -71,8 +73,30 @@ class GameSeeker(Seeker):
 		"""GameSeeker's constructor."""
 		pass
 
-	def search(self, content: bytes) -> str:
-		"""Search web page's content for raw data concerning a season's games.
+	def __search_list(self, soup) -> dict:
+		"""Searches games within the given soup organized with a list
+		structure.
+
+		Returns -- the raw data of the games obtained from the soup
+		"""
+		raw_data = soup.find(
+			'script',
+			string=lambda s: s is not None and s.find('JOGOS:') != -1
+		)
+
+		stt = raw_data.string.find('JOGOS:') + 7
+		end = raw_data.string.find('}],') + 2
+		raw_games = raw_data.string[stt:end]
+
+		stt = raw_data.string.find('EQUIPES:') + 9
+		end = raw_data.string.find('}},') + 2
+		raw_teams = raw_data.string[stt:end]
+
+		return {'raw_games': raw_games, 'raw_teams': raw_teams}
+
+	def search(self, content: bytes) -> dict:
+		"""Searches web page's content for raw data concerning a season's
+		games.
 
 		Parameters @Seeker
 		Returns @Seeker
@@ -81,20 +105,12 @@ class GameSeeker(Seeker):
 
 		if soup.find(name='table', id='tabela-jogos'):
 			# Used on Campeonato Brasileiro, seasons 2016 and 2017.
-			raw_data = soup.find(
-				'script',
-				string=lambda s: s is not None and s.find('JOGOS:') != -1
-			)
+			raw_data = self.__search_list(soup)
 
-			stt = raw_data.string.find('JOGOS:') + 7
-			end = raw_data.string.find('}],') + 2
-			raw_games = raw_data.string[stt:end]
+		elif soup.find(name='div', id='lista-jogos'):
+			# Used on Campeonato Brasileiro, seasons 2003 through 2015.
+			raw_data = self.__search_table(soup)
 
-			stt = raw_data.string.find('EQUIPES:') + 9
-			end = raw_data.string.find('}},') + 2
-			raw_teams = raw_data.string[stt:end]
-
-			raw_data = {'raw_games': raw_games, 'raw_teams': raw_teams}
 		else:
 			raw_data = None
 
@@ -121,7 +137,7 @@ class SeasonSeeker(Seeker):
 		"""SeasonSeeker's constructor."""
 		pass
 
-	def search(self, content: bytes) -> str:
+	def search(self, content: bytes) -> dict:
 		"""Search web page's content for raw data concerning a championship's
 		seasons.
 
@@ -140,7 +156,8 @@ class SeasonSeeker(Seeker):
 
 		stt = raw_data.string.find('{"campeonato":')
 		end = raw_data.string.find('}]};') + 3
-		return raw_data.string[stt:end]
+
+		return {'content': raw_data.string[stt:end]}
 
 
 class TeamSeeker(Seeker):
@@ -154,7 +171,7 @@ class TeamSeeker(Seeker):
 		"""TeamSeeker's constructor."""
 		pass
 
-	def search(self, content: bytes) -> list:
+	def search(self, content: bytes) -> dict:
 		"""Search web page's content for raw data concerning teams.
 
 		Parameters @Seeker
@@ -168,4 +185,4 @@ class TeamSeeker(Seeker):
 			raise ScrapediaSearchError('The expected teams raw data could not'
 									   ' be found.')
 
-		return raw_data
+		return {'content': raw_data}

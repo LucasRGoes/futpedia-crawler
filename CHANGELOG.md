@@ -120,3 +120,7 @@ Changelog
 	* Deleted scrapers_bkp.py as all of its classes were migrated to the new pattern;
 	* Created tests for initial version of a GamePipeline to debug the class;
 	* Updated GamePipeline to work with one type of game web page;
+
+* __08-14-2019__:
+	* Updated a seeker's search() return type to dict to allow more flexibility on more complex pages;
+	* Updated the raw data parameter on a parsers' parse() to dict in response to the seekers change;

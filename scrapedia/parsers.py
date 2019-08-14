@@ -21,12 +21,12 @@ class Parser(abc.ABC):
 	Methods: parse
 	"""
 	@abc.abstractmethod
-	def parse(self, raw_data: str) -> tuple:
+	def parse(self, raw_data: dict) -> tuple:
 		"""Parses raw data into a tuple of models.
 
 		Parameters
 		----------
-		raw_data: str -- raw data to be parsed
+		raw_data: dict -- raw data to be parsed
 
 		Returns: tuple -- tuple with the information of interest
 		"""
@@ -44,7 +44,7 @@ class ChampionshipParser(Parser):
 		"""ChampionshipParser's constructor."""
 		pass
 
-	def parse(self, raw_data: str) -> tuple:
+	def parse(self, raw_data: dict) -> tuple:
 		"""Parses raw data into a tuple of Championship models.
 
 		Parameters @Parser
@@ -56,7 +56,7 @@ class ChampionshipParser(Parser):
 
 			parsed_data = list(filter(
 				lambda x: x.get('nome') != 'Brasileiro Unificado',
-				json.loads(raw_data)
+				json.loads(raw_data.get('content'))
 			))
 
 			for idx, data in enumerate(parsed_data):
@@ -86,7 +86,7 @@ class GameParser(Parser):
 		"""GameParser's constructor."""
 		pass
 
-	def parse(self, raw_data: str) -> tuple:
+	def parse(self, raw_data: dict) -> tuple:
 		"""Parses raw data into a tuple of Game models.
 
 		Parameters @Parser
@@ -140,7 +140,7 @@ class SeasonParser(Parser):
 		"""SeasonParser's constructor."""
 		pass
 
-	def parse(self, raw_data: str) -> tuple:
+	def parse(self, raw_data: dict) -> tuple:
 		"""Parses raw data into a tuple of Season models.
 
 		Parameters @Parser
@@ -150,7 +150,8 @@ class SeasonParser(Parser):
 
 			models = []
 
-			for raw_season in json.loads(raw_data).get('edicoes'):
+			for raw_season \
+				in json.loads(raw_data.get('content')).get('edicoes'):
 
 				start_date = datetime.strptime(
 					raw_season.get('edicao').get('data_inicio'), '%Y-%m-%d')
@@ -190,7 +191,7 @@ class TeamParser(Parser):
 		"""TeamParser's constructor."""
 		pass
 
-	def parse(self, raw_data: list) -> tuple:
+	def parse(self, raw_data: dict) -> tuple:
 		"""Parses raw data into a tuple of Team models.
 
 		Parameters @Parser
@@ -200,7 +201,7 @@ class TeamParser(Parser):
 
 			models = []
 
-			for idx, raw_team in enumerate(raw_data):
+			for idx, raw_team in enumerate(raw_data.get('content')):
 				team = Team(idx, raw_team.string, raw_team.a.get('href'))
 				models.append(team)
 

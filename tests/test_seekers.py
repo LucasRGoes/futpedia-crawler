@@ -51,9 +51,10 @@ class ChampionshipSeekerTests(unittest.TestCase):
 		seeker = seekers.ChampionshipSeeker()
 		res = seeker.search(MOCK_CHAMP_CONTENT)
 		self.assertEqual(
-			res, 
-			'[{"nome":"Campeonato Brasileiro","slug":"campeonato-brasileiro",'
-			'"tipo":"campeonato"}]'
+			res,
+			{'content': ('[{"nome":"Campeonato Brasileiro",'
+						 '"slug":"campeonato-brasileiro",'
+						 '"tipo":"campeonato"}]')},
 		)
 
 		with self.assertRaises(ScrapediaSearchError):
@@ -76,12 +77,12 @@ class SeasonSeekerTests(unittest.TestCase):
 		res = seeker.search(MOCK_SEASON_CONTENT)
 		self.assertEqual(
 			res, 
-			'{"campeonato":{"slug":"copa-confederacoes","id":154,'
+			{'content': ('{"campeonato":{"slug":"copa-confederacoes","id":154,'
 			'"nome":"Copa das Confederações"},"edicoes":[{"edicao":'
 			'{"data_fim":"2013-06-30","nome":"Copa das Confederações 2013",'
 			'"slug_editorial":"2013","id":1230,"data_inicio":"2013-06-15",'
 			'"slug":"copa-confederacoes-2013","campeonato_id":154},'
-			'"campeoes":[2318],"gols":68,"jogos_realizados":16,"jogos":16}]}'
+			'"campeoes":[2318],"gols":68,"jogos_realizados":16,"jogos":16}]}')}
 		)
 
 		with self.assertRaises(ScrapediaSearchError):
@@ -102,8 +103,8 @@ class TeamSeekerTests(unittest.TestCase):
 		"""
 		seeker = seekers.TeamSeeker()
 		res = seeker.search(MOCK_TEAM_CONTENT)
-		self.assertIsInstance(res, list)
-		self.assertEqual(len(res), 2)
+		self.assertIsInstance(res, dict)
+		self.assertEqual(len(res.get('content')), 2)
 
 		with self.assertRaises(ScrapediaSearchError):
 			seeker.search(MOCK_NO_CONTENT)

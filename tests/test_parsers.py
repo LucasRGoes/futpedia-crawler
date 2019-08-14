@@ -14,25 +14,25 @@ from scrapedia.errors import ScrapediaParseError
 
 MOCK_NO_RAW_DATA = 'none'
 
-MOCK_CHAMP_RAW_DATA = (
+MOCK_CHAMP_RAW_DATA = {'content': (
 	'[{"nome":"Campeonato Brasileiro",'
 	'"slug":"campeonato-brasileiro","tipo":"campeonato"}]'
-)
+)}
 
-MOCK_SEASON_RAW_DATA = (
+MOCK_SEASON_RAW_DATA = {'content': (
 	'{"campeonato":{"slug":"copa-confederacoes","id":154,'
 	'"nome":"Copa das Confederações"},"edicoes":[{"edicao":'
 	'{"data_fim":"2013-06-30","nome":"Copa das Confederações 2013",'
 	'"slug_editorial":"2013","id":1230,"data_inicio":"2013-06-15",'
 	'"slug":"copa-confederacoes-2013","campeonato_id":154},'
 	'"campeoes":[2318],"gols":68,"jogos_realizados":16,"jogos":16}]}'
-)
+)}
 
 MockTag = collections.namedtuple('MockTag', ['string', 'a'])
-MOCK_TEAM_RAW_DATA = [
+MOCK_TEAM_RAW_DATA = {'content':[
 	MockTag('AA Colatina', {'href': '/colatina'}),
 	MockTag('AA Internacional', {'href': '/aa-internacional'})
-]
+]}
 
 
 class ChampionshipParserTests(unittest.TestCase):
