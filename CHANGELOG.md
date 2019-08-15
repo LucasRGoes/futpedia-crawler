@@ -124,3 +124,7 @@ Changelog
 * __08-14-2019__:
 	* Updated a seeker's search() return type to dict to allow more flexibility on more complex pages;
 	* Updated the raw data parameter on a parsers' parse() to dict in response to the seekers change;
+	* Creating paths of seeking and parsing for different web pages to allow more flexibility at GamePipeline;
+	* Created paths for a round robin championship with a list and table structures;
+	* Added phase parameter to Game model;
+	* Added first version of a round robin plus playoffs parser and seeker methods at GamePipeline;

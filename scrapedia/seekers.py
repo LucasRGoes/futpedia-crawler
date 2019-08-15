@@ -73,9 +73,35 @@ class GameSeeker(Seeker):
 		"""GameSeeker's constructor."""
 		pass
 
-	def __search_list(self, soup) -> dict:
-		"""Searches games within the given soup organized with a list
-		structure.
+	def __round_robin_playoffs(self, soup) -> dict:
+		"""Searches games within the given soup organized in a table structure
+		plus a bracket one.
+
+		Returns -- the raw data of the games obtained from the soup
+		"""
+		round_robin = soup.find_all(
+			name='li', class_='lista-classificacao-jogo')
+		playoffs = soup.find_all(name='div', class_='chave')
+
+		return {
+			'meta': {'type': 'rr_playoffs'},
+			'content': {'round_robin': round_robin, 'playoffs': playoffs}
+		}
+
+	def __round_robin_table(self, soup) -> dict:
+		"""Searches games within the given soup organized in a table structure.
+
+		Returns -- the raw data of the games obtained from the soup
+		"""
+		games = soup.find_all(name='li', class_='lista-classificacao-jogo')
+
+		return {
+			'meta': {'type': 'rr_table'},
+			'content': games
+		}
+
+	def __round_robin_list(self, soup) -> dict:
+		"""Searches games within the given soup organized in a list structure.
 
 		Returns -- the raw data of the games obtained from the soup
 		"""
@@ -86,13 +112,16 @@ class GameSeeker(Seeker):
 
 		stt = raw_data.string.find('JOGOS:') + 7
 		end = raw_data.string.find('}],') + 2
-		raw_games = raw_data.string[stt:end]
+		games = raw_data.string[stt:end]
 
 		stt = raw_data.string.find('EQUIPES:') + 9
 		end = raw_data.string.find('}},') + 2
-		raw_teams = raw_data.string[stt:end]
+		teams = raw_data.string[stt:end]
 
-		return {'raw_games': raw_games, 'raw_teams': raw_teams}
+		return {
+			'meta': {'type': 'rr_list'},
+			'content': {'games': games, 'teams': teams}
+		}
 
 	def search(self, content: bytes) -> dict:
 		"""Searches web page's content for raw data concerning a season's
@@ -103,20 +132,22 @@ class GameSeeker(Seeker):
 		"""
 		soup = BeautifulSoup(content, 'html.parser')
 
-		if soup.find(name='table', id='tabela-jogos'):
-			# Used on Campeonato Brasileiro, seasons 2016 and 2017.
-			raw_data = self.__search_list(soup)
+		if soup.find(name='div', id='lista-jogos') \
+		   and soup.find(name='div',
+		   				 class_='tabela-classificacao-mata-mata-grupado'):
+		   	# Used on round-robin + playoffs championships.
+		   	raw_data = self.__round_robin_playoffs(soup)
 
 		elif soup.find(name='div', id='lista-jogos'):
-			# Used on Campeonato Brasileiro, seasons 2003 through 2015.
-			raw_data = self.__search_table(soup)
+			# Used on round-robin championships organized as tables.
+			raw_data = self.__round_robin_table(soup)
+
+		elif soup.find(name='table', id='tabela-jogos'):
+			# Used on round-robin championships organized as lists.
+			raw_data = self.__round_robin_list(soup)
 
 		else:
 			raw_data = None
-
-		# Searches for HTML with tables
-		# raw_games = soup.find_all(name='li',
-		# class_='lista-classificacao-jogo')
 
 		if raw_data is None:
 			raise ScrapediaSearchError('The expected season\'s games raw data'

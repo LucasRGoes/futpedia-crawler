@@ -11,7 +11,7 @@ Championship = collections.namedtuple('Championship', ['uid', 'name', 'path'])
 
 Game = collections.namedtuple('Game', [
 	'uid', 'home_team', 'home_goals', 'away_goals', 'away_team', 'stadium',
-	'round', 'date', 'path'
+	'phase', 'round', 'date', 'path'
 ])
 
 
