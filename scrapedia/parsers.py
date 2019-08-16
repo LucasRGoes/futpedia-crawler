@@ -86,182 +86,219 @@ class GameParser(Parser):
 		"""GameParser's constructor."""
 		pass
 
-	def __round_robin_playoffs(self, raw_data: dict) -> tuple:
-		"""Parses raw data that was extracted from a table plus a bracket
-		structure.
+	def __parse_bracket(self, raw_data, extra, idx: int=0) -> list:
+		"""Parses raw data that was extracted from a bracket structure.
 
-		Returns: tuple -- tuple with models built with the data
+		Parameters
+		----------
+		raw_data -- the raw data to be parsed
+		extra -- extra data to help with the parsing of the raw data
+		idx: int -- the starting point of the games' indexes (default 0)
+
+		Returns: list -- list with models built using the raw data
 		"""
 		models = []
 
-		round_robin = raw_data.get('content').get('round_robin')
-		playoffs = raw_data.get('content').get('playoffs')
+		phases = []
+		extra = [phase.string for phase in extra.find_all(name='h3')]
+		if 'Oitavas de final' in extra:
+			phases.extend(['best_of_16'] * 8)
+		if 'Quartas de final' in extra:
+			phases.extend(['quarterfinals'] * 4)
+		if 'Semifinal' in extra:
+			phases.extend(['semifinals'] * 2)
+		if 'Final' in extra:
+			phases.append('finals')
 
-		# Takes care of round-robin games.
-		for idx, raw_game in enumerate(round_robin):
-
-			home_team = raw_game.find(name='div', class_='time mandante') \
-								.meta.get('content')
-			away_team = raw_game.find(name='div', class_='time visitante') \
-								.meta.get('content')
-			home_goals = int(raw_game.find(
-				name='span', class_='mandante font-face').string)
-			away_goals = int(raw_game.find(
-				name='span', class_='visitante font-face').string)
-
-			stadium = raw_game.find(
-				name='span', attrs={'itemprop': 'name'}).string
-			phase = 'first_phase'
-			round_ = raw_game.get('data-rodada')
-			path = raw_game.a.get('href')
-
-			date = datetime.strptime(raw_game.time.get('datetime'), '%d/%m/%Y')
-			date = time.mktime(date.timetuple()) * 1000
-
-			game = Game(idx, home_team, home_goals, away_goals, away_team,
-					    stadium, phase, round_, date, path)
-			models.append(game)
-
-		# Takes care of playoffs.
-		for raw_games in playoffs:
-			first_team = raw_games.find(name='div', class_='mandante') \
-								  .strong.string
-			second_team = raw_games.find(name='div', class_='visitante') \
-								   .strong.string
+		for games in raw_data:
+			first_team = games.find(name='div', class_='mandante') \
+							  .get_text().strip()
+			second_team = games.find(name='div', class_='visitante') \
+							   .get_text().strip()
+			phase = phases.pop(0)
 
 			# Game 1.
-			game_1 = raw_games.find(name='div', class_='jogo_ida dados')
-
+			game_1 = games.find(name='div', class_='jogo_ida dados')
 			home_team = first_team
 			away_team = second_team
-			home_goals = int(game_1.find(
-				name='span', class_='placar primeiro font-face').string)
-			away_goals = int(game_1.find(
-				name='span', class_='placar font-face').string)
+
+			home_goals = game_1.find(
+				name='span', class_='placar primeiro font-face').string
+			away_goals = game_1.find(
+				name='span', class_='placar font-face').string
 
 			stadium = game_1.find(name='div', class_='content').strong.string
-			phase = None
 			round_ = None
 			path = game_1.a.get('href')
 
-			date = game_1.find(name='div', class_='content').string
+			date = game_1.find(name='div', class_='content').get_text() \
+						 .split(' ')
+			date = datetime.strptime(
+				'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
+			date = time.mktime(date.timetuple()) * 1000
 
-			idx = idx + 1
-			game = Game(idx, home_team, home_goals, away_goals, away_team,
-					    stadium, phase, round_, date, path)
-			models.append(game)
+			models.append(Game(
+				idx, home_team, int(home_goals), int(away_goals), away_team,
+				stadium, phase, round_, date, path
+			))
+
+			idx += 1
 
 			# Game 2.
-			game_2 = raw_games.find(name='div', class_='jogo_volta dados')
+			game_2 = games.find(name='div', class_='jogo_volta dados')
+			if game_2 is not None:
 
-			home_team = second_team
-			away_team = first_team
-			home_goals = int(game_2.find(
-				name='span', class_='placar font-face').string)
-			away_goals = int(game_2.find(
-				name='span', class_='placar primeiro font-face').string)
+				home_team = second_team
+				away_team = first_team
 
-			stadium = game_2.find(name='div', class_='content').strong.string
-			phase = None
-			round_ = None
-			path = game_2.a.get('href')
+				home_goals = game_2.find(
+					name='span', class_='placar font-face').string
+				away_goals = game_2.find(
+					name='span', class_='placar primeiro font-face').string
 
-			date = game_2.find(name='div', class_='content').string
+				stadium = game_2.find(name='div', class_='content') \
+								.strong.string
+				round_ = None
+				path = game_2.a.get('href')
 
-			idx = idx + 1
-			game = Game(idx, home_team, home_goals, away_goals, away_team,
-					    stadium, phase, round_, date, path)
-			models.append(game)
+				date = game_2.find(name='div', class_='content').get_text() \
+							 .split(' ')
+				date = datetime.strptime(
+					'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
+				date = time.mktime(date.timetuple()) * 1000
 
+				models.append(Game(
+					idx, home_team, int(home_goals), int(away_goals),
+					away_team, stadium, phase, round_, date, path
+				))
 
-		# Takes care of playoffs.
-		# phases = []
-		# qtty = (len(playoffs) - 1) / 2
-		# if qtty >= 1:
-		# 	phases.append('finals')
-		# if qtty >= 2:
-		# 	phases.append(['semifinals'] * 2)
-		# if qtty >= 3:
-		# 	phases.append(['quarterfinals'] * 4)
-		# if qtty >= 4:
-		# 	phases.append(['round_of_sixteen'] * 8)
-		# phases.reverse()
+				idx += 1
 
-		return tuple(models)
+			# Game 3.
+			game_3 = games.find(name='div', class_='terceiro_jogo dados')
+			if game_3 is not None:
 
-	def __round_robin_table(self, raw_data: dict) -> tuple:
-		"""Parses raw data that was extracted from a table structure.
+				home_team = second_team
+				away_team = first_team
 
-		Returns: tuple -- tuple with models built with the data
-		"""
-		models = []
+				home_goals = game_2.find(
+					name='span', class_='placar font-face').string
+				away_goals = game_2.find(
+					name='span', class_='placar primeiro font-face').string
 
-		for idx, raw_game in enumerate(raw_data.get('content')):
+				stadium = game_2.find(name='div', class_='content') \
+								.strong.string
+				round_ = None
+				path = game_2.a.get('href')
 
-			home_team = raw_game.find(name='div', class_='time mandante') \
-								.meta.get('content')
-			away_team = raw_game.find(name='div', class_='time visitante') \
-								.meta.get('content')
-			home_goals = int(raw_game.find(
-				name='span', class_='mandante font-face').string)
-			away_goals = int(raw_game.find(
-				name='span', class_='visitante font-face').string)
+				date = game_2.find(name='div', class_='content').get_text() \
+							 .split(' ')
+				date = datetime.strptime(
+					'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
+				date = time.mktime(date.timetuple()) * 1000
 
-			stadium = raw_game.find(
-				name='span', attrs={'itemprop': 'name'}).string
-			phase = 'first_phase'
-			round_ = raw_game.get('data-rodada')
-			path = raw_game.a.get('href')
+				models.append(Game(
+					idx, home_team, int(home_goals), int(away_goals),
+					away_team, stadium, phase, round_, date, path
+				))
 
-			date = datetime.strptime(
-				'{0} {1}'.format(
-					raw_game.time.get('datetime'),
-					raw_game.find(name='span', class_='horario').string
-				),
-				'%d/%m/%Y %Hh%M'
-			)
-			date = time.mktime(date.timetuple()) * 1000
+				idx += 1
 
-			game = Game(idx, home_team, home_goals, away_goals, away_team,
-					    stadium, phase, round_, date, path)
-			models.append(game)
+		return models
 
-		return tuple(models)
-
-	def __round_robin_list(self, raw_data: dict) -> tuple:
+	def __parse_list(self, raw_data, extra, idx: int=0) -> list:
 		"""Parses raw data that was extracted from a list structure.
 
-		Returns: tuple -- tuple with models built with the data
+		Parameters
+		----------
+		raw_data -- the raw data to be parsed
+		extra -- extra data to help with the parsing of the raw data
+		idx: int -- the starting point of the games' indexes (default 0)
+
+		Returns: list -- list with models built using the raw data
 		"""
 		models = []
 
-		raw_games = json.loads(raw_data.get('content').get('games'))
-		raw_teams = json.loads(raw_data.get('content').get('teams'))
+		games = json.loads(raw_data)
+		teams = json.loads(extra)
+		games.reverse()
 
-		for idx, raw_game in enumerate(raw_games):
+		for game in games:
 
-			home_team = raw_teams[str(raw_game['mand'])]['nome_popular']
-			away_team = raw_teams[str(raw_game['vis'])]['nome_popular']
+			home_team = teams[str(game.get('mand'))].get('nome_popular')
+			away_team = teams[str(game.get('vis'))].get('nome_popular')
 
-			home_goals = raw_game.get('golm')
-			away_goals = raw_game.get('golv')
+			home_goals = game.get('golm')
+			away_goals = game.get('golv')
 
-			stadium = raw_game.get('sede')
+			stadium = game.get('sede')
 			phase = 'first_phase'
-			round_ = raw_game.get('rod')
-			path = raw_game.get('url')
+			round_ = game.get('rod')
+			path = game.get('url')
 
 			date = datetime.strptime(
-				'{0} {1}'.format(raw_game.get('dt'), raw_game.get('hr')),
+				'{0} {1}'.format(game.get('dt'), game.get('hr')),
 				'%d/%m/%Y %Hh%M'
 			)
 			date = time.mktime(date.timetuple()) * 1000
 
-			game = Game(idx, home_team, home_goals, away_goals, away_team,
-					    stadium, phase, round_, date, path)
-			models.append(game)
+			models.append(Game(
+				idx, home_team, home_goals, away_goals, away_team, stadium,
+				phase, round_, date, path
+			))
 
-		return tuple(models)
+			idx += 1
+
+		return models
+
+	def __parse_table(self, raw_data, idx: int=0) -> list:
+		"""Parses raw data that was extracted from a table structure.
+
+		Parameters
+		----------
+		raw_data -- the raw data to be parsed
+		idx: int -- the starting point of the games' indexes (default 0)
+
+		Returns: list -- list with models built using the raw data
+		"""
+		models = []
+
+		for game in raw_data:
+
+			home_team = game.find(name='div', class_='time mandante') \
+							.meta.get('content')
+			away_team = game.find(name='div', class_='time visitante') \
+							.meta.get('content')
+
+			home_goals = game.find(name='span', class_='mandante font-face') \
+							 .string
+			away_goals = game.find(name='span', class_='visitante font-face') \
+							 .string
+
+			stadium = game.find(name='span', attrs={'itemprop': 'name'}).string
+			phase = 'first_phase'
+			round_ = game.get('data-rodada')
+			path = game.a.get('href')
+
+			hour = game.find(name='span', class_='horario').string
+			if hour is None:
+				date = datetime.strptime(game.time.get('datetime'), '%d/%m/%Y')
+
+			else:
+				date = datetime.strptime(
+					'{0} {1}'.format(game.time.get('datetime'), hour),
+					'%d/%m/%Y %Hh%M'
+				)
+			date = time.mktime(date.timetuple()) * 1000
+
+			models.append(Game(
+				idx, home_team, int(home_goals), int(away_goals), away_team,
+				stadium, phase, round_, date, path
+			))
+
+			idx += 1
+
+		return models
 
 	def parse(self, raw_data: dict) -> tuple:
 		"""Parses raw data into a tuple of Game models.
@@ -271,14 +308,23 @@ class GameParser(Parser):
 		"""
 		try:
 
-			if raw_data.get('meta').get('type') == 'rr_playoffs':
-				return self.__round_robin_playoffs(raw_data)
+			if raw_data.get('type') == 'bracket_table':
+				table_models = self.__parse_table(raw_data['raw']['table'])
+				bracket_models = self.__parse_bracket(
+					raw_data['raw']['bracket'],
+					raw_data['extra']['bracket'],
+					idx=len(table_models)
+				)
 
-			elif raw_data.get('meta').get('type') == 'rr_table':
-				return self.__round_robin_table(raw_data)
+				models = table_models + bracket_models
 
-			elif raw_data.get('meta').get('type') == 'rr_list':
-				return self.__round_robin_list(raw_data)
+			elif raw_data.get('type') == 'list':
+				models = self.__parse_list(raw_data['raw'], raw_data['extra'])
+
+			elif raw_data.get('type') == 'table':
+				models = self.__parse_table(raw_data['raw'])
+
+			return tuple(models)
 
 		except Exception as err:
 			raise ScrapediaParseError(

@@ -128,3 +128,9 @@ Changelog
 	* Created paths for a round robin championship with a list and table structures;
 	* Added phase parameter to Game model;
 	* Added first version of a round robin plus playoffs parser and seeker methods at GamePipeline;
+
+* __08-15-2019__:
+	* Added manifest file and include data flag to setup.py to publish the VERSION file together with the
+	package;
+	* Changed seekers and parsers concerning the GamePipeline to allow more reusability of their methods;
+	* Added logic so that GamePipeline can seek and parse web pages that have a combination of tables and brackets; 

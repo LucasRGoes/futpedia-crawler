@@ -73,34 +73,18 @@ class GameSeeker(Seeker):
 		"""GameSeeker's constructor."""
 		pass
 
-	def __round_robin_playoffs(self, soup) -> dict:
-		"""Searches games within the given soup organized in a table structure
-		plus a bracket one.
+	def __search_bracket(self, soup):
+		"""Searches games within the given soup organized in a bracket
+		structure.
 
 		Returns -- the raw data of the games obtained from the soup
 		"""
-		round_robin = soup.find_all(
-			name='li', class_='lista-classificacao-jogo')
-		playoffs = soup.find_all(name='div', class_='chave')
+		content = soup.find_all(name='div', class_='chave')
+		extra = soup.find(name='div', class_='titulos')
 
-		return {
-			'meta': {'type': 'rr_playoffs'},
-			'content': {'round_robin': round_robin, 'playoffs': playoffs}
-		}
+		return content, extra
 
-	def __round_robin_table(self, soup) -> dict:
-		"""Searches games within the given soup organized in a table structure.
-
-		Returns -- the raw data of the games obtained from the soup
-		"""
-		games = soup.find_all(name='li', class_='lista-classificacao-jogo')
-
-		return {
-			'meta': {'type': 'rr_table'},
-			'content': games
-		}
-
-	def __round_robin_list(self, soup) -> dict:
+	def __search_list(self, soup):
 		"""Searches games within the given soup organized in a list structure.
 
 		Returns -- the raw data of the games obtained from the soup
@@ -112,16 +96,20 @@ class GameSeeker(Seeker):
 
 		stt = raw_data.string.find('JOGOS:') + 7
 		end = raw_data.string.find('}],') + 2
-		games = raw_data.string[stt:end]
+		content = raw_data.string[stt:end]
 
 		stt = raw_data.string.find('EQUIPES:') + 9
 		end = raw_data.string.find('}},') + 2
-		teams = raw_data.string[stt:end]
+		extra = raw_data.string[stt:end]
 
-		return {
-			'meta': {'type': 'rr_list'},
-			'content': {'games': games, 'teams': teams}
-		}
+		return content, extra
+
+	def __search_table(self, soup):
+		"""Searches games within the given soup organized in a table structure.
+
+		Returns -- the raw data of the games obtained from the soup
+		"""
+		return soup.find_all(name='li', class_='lista-classificacao-jogo')
 
 	def search(self, content: bytes) -> dict:
 		"""Searches web page's content for raw data concerning a season's
@@ -132,19 +120,28 @@ class GameSeeker(Seeker):
 		"""
 		soup = BeautifulSoup(content, 'html.parser')
 
-		if soup.find(name='div', id='lista-jogos') \
-		   and soup.find(name='div',
-		   				 class_='tabela-classificacao-mata-mata-grupado'):
-		   	# Used on round-robin + playoffs championships.
-		   	raw_data = self.__round_robin_playoffs(soup)
+		if soup.find(name='div', id='lista-jogos'):
+			if soup.find(name='div',
+						 class_='tabela-classificacao-mata-mata-grupado'):
+				# Used on championships with round-robin and knockout stages.
+				bracket, extra = self.__search_bracket(soup)
+				table = self.__search_table(soup)
 
-		elif soup.find(name='div', id='lista-jogos'):
-			# Used on round-robin championships organized as tables.
-			raw_data = self.__round_robin_table(soup)
+				raw_data = {
+					'type': 'bracket_table',
+					'raw': {'bracket': bracket, 'table': table},
+					'extra': {'bracket': extra}
+				}
+
+			else:
+				# Used on round-robin championships organized as tables.
+				table = self.__search_table(soup)
+				raw_data = {'type': 'table', 'raw': table}
 
 		elif soup.find(name='table', id='tabela-jogos'):
 			# Used on round-robin championships organized as lists.
-			raw_data = self.__round_robin_list(soup)
+			list_, extra = self.__search_list(soup)
+			raw_data = {'type': 'list', 'raw': list_, 'extra': extra}
 
 		else:
 			raw_data = None
