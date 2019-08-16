@@ -28,7 +28,8 @@ setup(
     packages=find_packages(exclude=('tests', 'docs')),
     version=open(join(MODULE_NAME, 'VERSION')).read().strip(),
     install_requires=['beautifulsoup4==4.7.1', 'cachetools==3.1.1',
-                      'pandas==0.24.2', 'requests==2.22.0'],
+                      'pandas==0.24.2', 'requests==2.22.0',
+                      'Unidecode==1.1.1'],
     classifiers=['Programming Language :: Python :: 3.6'],
     include_package_data=True
 )

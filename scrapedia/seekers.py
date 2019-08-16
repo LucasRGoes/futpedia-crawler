@@ -79,10 +79,10 @@ class GameSeeker(Seeker):
 
 		Returns -- the raw data of the games obtained from the soup
 		"""
-		content = soup.find_all(name='div', class_='chave')
+		bracket = soup.find_all(name='div', class_='chave')
 		extra = soup.find(name='div', class_='titulos')
 
-		return content, extra
+		return bracket, extra
 
 	def __search_list(self, soup):
 		"""Searches games within the given soup organized in a list structure.
@@ -96,20 +96,23 @@ class GameSeeker(Seeker):
 
 		stt = raw_data.string.find('JOGOS:') + 7
 		end = raw_data.string.find('}],') + 2
-		content = raw_data.string[stt:end]
+		list_ = raw_data.string[stt:end]
 
 		stt = raw_data.string.find('EQUIPES:') + 9
 		end = raw_data.string.find('}},') + 2
 		extra = raw_data.string[stt:end]
 
-		return content, extra
+		return list_, extra
 
 	def __search_table(self, soup):
 		"""Searches games within the given soup organized in a table structure.
 
 		Returns -- the raw data of the games obtained from the soup
 		"""
-		return soup.find_all(name='li', class_='lista-classificacao-jogo')
+		table = soup.find_all(name='li', class_='lista-classificacao-jogo')
+		extra = soup.find(name='li', class_='fase-atual')
+
+		return table, extra
 
 	def search(self, content: bytes) -> dict:
 		"""Searches web page's content for raw data concerning a season's
@@ -124,19 +127,19 @@ class GameSeeker(Seeker):
 			if soup.find(name='div',
 						 class_='tabela-classificacao-mata-mata-grupado'):
 				# Used on championships with round-robin and knockout stages.
-				bracket, extra = self.__search_bracket(soup)
-				table = self.__search_table(soup)
+				bracket, b_extra = self.__search_bracket(soup)
+				table, t_extra = self.__search_table(soup)
 
 				raw_data = {
 					'type': 'bracket_table',
 					'raw': {'bracket': bracket, 'table': table},
-					'extra': {'bracket': extra}
+					'extra': {'bracket': b_extra, 'table': t_extra}
 				}
 
 			else:
 				# Used on round-robin championships organized as tables.
-				table = self.__search_table(soup)
-				raw_data = {'type': 'table', 'raw': table}
+				table, extra = self.__search_table(soup)
+				raw_data = {'type': 'table', 'raw': table, 'extra': extra}
 
 		elif soup.find(name='table', id='tabela-jogos'):
 			# Used on round-robin championships organized as lists.

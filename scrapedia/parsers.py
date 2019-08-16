@@ -11,6 +11,8 @@ import json
 import time
 from datetime import datetime
 
+from unidecode import unidecode
+
 from .errors import ScrapediaParseError
 from .models import Championship, Game, Season, Team
 
@@ -111,88 +113,44 @@ class GameParser(Parser):
 			phases.append('finals')
 
 		for games in raw_data:
+
 			first_team = games.find(name='div', class_='mandante') \
 							  .get_text().strip()
 			second_team = games.find(name='div', class_='visitante') \
 							   .get_text().strip()
+
 			phase = phases.pop(0)
 
-			# Game 1.
-			game_1 = games.find(name='div', class_='jogo_ida dados')
-			home_team = first_team
-			away_team = second_team
+			for game in games.find_all(name='div', class_='dados'):
 
-			home_goals = game_1.find(
-				name='span', class_='placar primeiro font-face').string
-			away_goals = game_1.find(
-				name='span', class_='placar font-face').string
-
-			stadium = game_1.find(name='div', class_='content').strong.string
-			round_ = None
-			path = game_1.a.get('href')
-
-			date = game_1.find(name='div', class_='content').get_text() \
-						 .split(' ')
-			date = datetime.strptime(
-				'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
-			date = time.mktime(date.timetuple()) * 1000
-
-			models.append(Game(
-				idx, home_team, int(home_goals), int(away_goals), away_team,
-				stadium, phase, round_, date, path
-			))
-
-			idx += 1
-
-			# Game 2.
-			game_2 = games.find(name='div', class_='jogo_volta dados')
-			if game_2 is not None:
-
-				home_team = second_team
-				away_team = first_team
-
-				home_goals = game_2.find(
-					name='span', class_='placar font-face').string
-				away_goals = game_2.find(
+				first_goals = game.find(
 					name='span', class_='placar primeiro font-face').string
-
-				stadium = game_2.find(name='div', class_='content') \
-								.strong.string
-				round_ = None
-				path = game_2.a.get('href')
-
-				date = game_2.find(name='div', class_='content').get_text() \
-							 .split(' ')
-				date = datetime.strptime(
-					'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
-				date = time.mktime(date.timetuple()) * 1000
-
-				models.append(Game(
-					idx, home_team, int(home_goals), int(away_goals),
-					away_team, stadium, phase, round_, date, path
-				))
-
-				idx += 1
-
-			# Game 3.
-			game_3 = games.find(name='div', class_='terceiro_jogo dados')
-			if game_3 is not None:
-
-				home_team = second_team
-				away_team = first_team
-
-				home_goals = game_2.find(
+				second_goals = game.find(
 					name='span', class_='placar font-face').string
-				away_goals = game_2.find(
-					name='span', class_='placar primeiro font-face').string
 
-				stadium = game_2.find(name='div', class_='content') \
-								.strong.string
+				path = game.a.get('href')
+
+				score = path.split('/')[-1]
+				label_1 = unidecode(first_team.lower()).replace(' ', '-')
+				label_2 = unidecode(second_team.lower()).replace(' ', '-')
+				
+				if score.find(label_1) == 0 or score.find(label_2) > 0:
+					home_team = first_team
+					away_team = second_team
+					home_goals = first_goals
+					away_goals = second_goals
+
+				else:
+					home_team = second_team
+					away_team = first_team
+					home_goals = second_goals
+					away_goals = first_goals
+
+				stadium = game.find(name='div', class_='content').strong.string
 				round_ = None
-				path = game_2.a.get('href')
 
-				date = game_2.find(name='div', class_='content').get_text() \
-							 .split(' ')
+				date = game.find(name='div', class_='content').get_text() \
+						   .split(' ')
 				date = datetime.strptime(
 					'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
 				date = time.mktime(date.timetuple()) * 1000
@@ -251,12 +209,13 @@ class GameParser(Parser):
 
 		return models
 
-	def __parse_table(self, raw_data, idx: int=0) -> list:
+	def __parse_table(self, raw_data, extra, idx: int=0) -> list:
 		"""Parses raw data that was extracted from a table structure.
 
 		Parameters
 		----------
 		raw_data -- the raw data to be parsed
+		extra -- extra data to help with the parsing of the raw data
 		idx: int -- the starting point of the games' indexes (default 0)
 
 		Returns: list -- list with models built using the raw data
@@ -309,7 +268,10 @@ class GameParser(Parser):
 		try:
 
 			if raw_data.get('type') == 'bracket_table':
-				table_models = self.__parse_table(raw_data['raw']['table'])
+				table_models = self.__parse_table(
+					raw_data['raw']['table'],
+					raw_data['extra']['table']
+				)
 				bracket_models = self.__parse_bracket(
 					raw_data['raw']['bracket'],
 					raw_data['extra']['bracket'],
@@ -322,7 +284,7 @@ class GameParser(Parser):
 				models = self.__parse_list(raw_data['raw'], raw_data['extra'])
 
 			elif raw_data.get('type') == 'table':
-				models = self.__parse_table(raw_data['raw'])
+				models = self.__parse_table(raw_data['raw'], raw_data['extra'])
 
 			return tuple(models)
 

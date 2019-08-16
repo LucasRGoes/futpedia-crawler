@@ -134,3 +134,4 @@ Changelog
 	package;
 	* Changed seekers and parsers concerning the GamePipeline to allow more reusability of their methods;
 	* Added logic so that GamePipeline can seek and parse web pages that have a combination of tables and brackets; 
+	* Corrected GamePipeline so that any knockout stages on any championship can be parsed independently of the number of games in each phase;
