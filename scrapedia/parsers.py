@@ -153,7 +153,7 @@ class GameParser(Parser):
 						   .split(' ')
 				date = datetime.strptime(
 					'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
-				date = time.mktime(date.timetuple()) * 1000
+				date = int(time.mktime(date.timetuple()) * 1000)
 
 				models.append(Game(
 					idx, home_team, int(home_goals), int(away_goals),
@@ -198,7 +198,7 @@ class GameParser(Parser):
 				'{0} {1}'.format(game.get('dt'), game.get('hr')),
 				'%d/%m/%Y %Hh%M'
 			)
-			date = time.mktime(date.timetuple()) * 1000
+			date = int(time.mktime(date.timetuple()) * 1000)
 
 			models.append(Game(
 				idx, home_team, home_goals, away_goals, away_team, stadium,
@@ -248,7 +248,7 @@ class GameParser(Parser):
 					'{0} {1}'.format(game.time.get('datetime'), hour),
 					'%d/%m/%Y %Hh%M'
 				)
-			date = time.mktime(date.timetuple()) * 1000
+			date = int(time.mktime(date.timetuple()) * 1000)
 
 			models.append(Game(
 				idx, home_team, int(home_goals), int(away_goals), away_team,
@@ -328,8 +328,8 @@ class SeasonParser(Parser):
 											   .get('slug_editorial'))
 
 				year = start_date.year
-				start_date = time.mktime(start_date.timetuple()) * 1000
-				end_date = time.mktime(end_date.timetuple()) * 1000
+				start_date = int(time.mktime(start_date.timetuple()) * 1000)
+				end_date = int(time.mktime(end_date.timetuple()) * 1000)
 
 				season = Season(year, start_date, end_date, number_goals,
 								number_games, path)
