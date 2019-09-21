@@ -11,6 +11,7 @@ import json
 import time
 from datetime import datetime
 
+import pytz
 from unidecode import unidecode
 
 from .errors import ScrapediaParseError
@@ -112,6 +113,9 @@ class GameParser(Parser):
 		if 'Final' in extra:
 			phases.append('finals')
 
+		local = pytz.timezone('America/Sao_Paulo')
+		epoch = datetime.utcfromtimestamp(0).replace(tzinfo=pytz.utc)
+
 		for games in raw_data:
 
 			first_team = games.find(name='div', class_='mandante') \
@@ -149,11 +153,17 @@ class GameParser(Parser):
 				stadium = game.find(name='div', class_='content').strong.string
 				round_ = None
 
-				date = game.find(name='div', class_='content').get_text() \
+				date = game.find(name='div', class_='content') \
+						   .get_text() \
 						   .split(' ')
+
 				date = datetime.strptime(
-					'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M')
-				date = int(time.mktime(date.timetuple()) * 1000)
+					'{0} {1}'.format(date[1], date[3]), '%d/%m/%Y %Hh%M'
+				)
+
+				date = local.localize(date, is_dst=None)
+
+				date = (date - epoch).total_seconds() * 1000.0
 
 				models.append(Game(
 					idx, home_team, int(home_goals), int(away_goals),
@@ -181,6 +191,9 @@ class GameParser(Parser):
 		teams = json.loads(extra)
 		games.reverse()
 
+		local = pytz.timezone('America/Sao_Paulo')
+		epoch = datetime.utcfromtimestamp(0).replace(tzinfo=pytz.utc)
+
 		for game in games:
 
 			home_team = teams[str(game.get('mand'))].get('nome_popular')
@@ -198,7 +211,10 @@ class GameParser(Parser):
 				'{0} {1}'.format(game.get('dt'), game.get('hr')),
 				'%d/%m/%Y %Hh%M'
 			)
-			date = int(time.mktime(date.timetuple()) * 1000)
+
+			date = local.localize(date, is_dst=None)
+
+			date = (date - epoch).total_seconds() * 1000.0
 
 			models.append(Game(
 				idx, home_team, home_goals, away_goals, away_team, stadium,
@@ -221,6 +237,9 @@ class GameParser(Parser):
 		Returns: list -- list with models built using the raw data
 		"""
 		models = []
+
+		local = pytz.timezone('America/Sao_Paulo')
+		epoch = datetime.utcfromtimestamp(0).replace(tzinfo=pytz.utc)
 
 		for game in raw_data:
 
@@ -248,7 +267,10 @@ class GameParser(Parser):
 					'{0} {1}'.format(game.time.get('datetime'), hour),
 					'%d/%m/%Y %Hh%M'
 				)
-			date = int(time.mktime(date.timetuple()) * 1000)
+
+			date = local.localize(date, is_dst=None)
+
+			date = (date - epoch).total_seconds() * 1000.0
 
 			models.append(Game(
 				idx, home_team, int(home_goals), int(away_goals), away_team,
@@ -315,6 +337,9 @@ class SeasonParser(Parser):
 
 			models = []
 
+			local = pytz.timezone('America/Sao_Paulo')
+			epoch = datetime.utcfromtimestamp(0).replace(tzinfo=pytz.utc)
+
 			for raw_season \
 				in json.loads(raw_data.get('content')).get('edicoes'):
 
@@ -328,8 +353,12 @@ class SeasonParser(Parser):
 											   .get('slug_editorial'))
 
 				year = start_date.year
-				start_date = int(time.mktime(start_date.timetuple()) * 1000)
-				end_date = int(time.mktime(end_date.timetuple()) * 1000)
+
+				start_date = local.localize(start_date, is_dst=None)
+				start_date = (start_date - epoch).total_seconds() * 1000.0
+
+				end_date = local.localize(end_date, is_dst=None)
+				end_date = (end_date - epoch).total_seconds() * 1000.0
 
 				season = Season(year, start_date, end_date, number_goals,
 								number_games, path)
