@@ -1,0 +1,76 @@
+version: 2
+jobs:
+    build:
+        working_directory: ~/scrapedia
+        docker:
+            - image: circleci/python:3.6.4
+        environment:
+            PIPENV_VENV_IN_PROJECT: true
+        steps:
+            - checkout
+            - run: sudo chown -R circleci:circleci /usr/local/bin
+            - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+            - restore_cache:
+                key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
+            - run:
+                name: install dependencies
+                command: |
+                    sudo pip install pipenv
+                    pipenv install
+            - save_cache:
+                key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
+                paths:
+                - ".venv"
+                - "/usr/local/bin"
+                - "/usr/local/lib/python3.6/site-packages"
+            - run:
+                name: test package
+                command: |
+                    pipenv run python -m unittest -vvv tests/test_requesters.py
+                    pipenv run python -m unittest -vvv tests/test_seekers.py
+                    pipenv run python -m unittest -vvv tests/test_parsers.py
+                    pipenv run python -m unittest -vvv tests/test_packers.py
+                    pipenv run python -m unittest -vvv tests/test_pipeline.py
+                    pipenv run python -m unittest -vvv tests/test_scrapers.py
+    deploy:
+        working_directory: ~/scrapedia
+        docker:
+            - image: circleci/python:3.6.4
+        environment:
+            PIPENV_VENV_IN_PROJECT: true
+        steps:
+            - checkout
+            - restore_cache:
+                key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
+            - run:
+              name: init .pypirc
+              command: |
+                echo -e "[pypi]" >> ~/.pypirc
+                echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+                echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+            - run:
+              name: create packages
+              command: |
+                make package
+            - run:
+              name: upload to pypi
+              command: |
+                . venv/bin/activate
+                twine upload dist/*
+
+workflows:
+    version: 2
+    build_and_deploy:
+        jobs:
+            - build:
+                filters:
+                    tags:
+                        only: /.*/
+            - deploy:
+                requires:
+                    - build
+                filters:
+                    tags:
+                        only: /[0-9]+(\.[0-9]+)*/
+                    branches:
+                        ignore: /.*/
