@@ -7,6 +7,7 @@ __author__ = 'Lucas Góes'
 __email__ = 'lucas.rd.goes@gmail.com'
 """
 
+from .scrapers import *
 from .version import __version__
 
 
