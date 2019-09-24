@@ -39,6 +39,11 @@ jobs:
         environment:
             PIPENV_VENV_IN_PROJECT: true
         steps:
+            - checkout
+            - run: sudo chown -R circleci:circleci /usr/local/bin
+            - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+            - restore_cache:
+                key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
             - run:
                 name: init .pypirc
                 command: |
@@ -63,10 +68,8 @@ workflows:
             - build:
                 filters:
                     tags:
-                        only: /.*/
+                        ignore: /.*/
             - deploy:
-                requires:
-                    - build
                 filters:
                     tags:
                         only: /[0-9]+(\.[0-9]+)*/
