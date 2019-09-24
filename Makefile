@@ -1,4 +1,4 @@
-.PHONY: venv system-packages python-packages install unit-tests integration-tests tests all
+.PHONY: venv system-packages python-packages install unit-tests integration-tests tests package all
 
 venv:
 	pip install --user virtualenv
@@ -21,4 +21,8 @@ integration-tests:
 
 tests: unit-tests integration-tests
 
-all: install tests
+package:
+	python setup.py sdist
+	python setup.py bdist_wheel
+
+all: install tests package

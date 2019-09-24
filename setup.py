@@ -30,6 +30,12 @@ setup(
     install_requires=['beautifulsoup4==4.7.1', 'cachetools==3.1.1',
                       'pandas==0.24.2', 'requests==2.22.0',
                       'Unidecode==1.1.1'],
-    classifiers=['Programming Language :: Python :: 3.6'],
+    classifiers=[
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3 :: Only'
+    ],
     include_package_data=True
 )
