@@ -8,7 +8,7 @@ MODULE_NAME = 'scrapedia'
 REPO_NAME = 'scrapedia'
 
 
-with open('README.md') as f:
+with open('README.rst') as f:
     readme = f.read()
 
 with open('LICENSE') as f:
@@ -21,7 +21,6 @@ setup(
                  ' historic data from the webpage futpedia.globo.com'),
     license=license,
     long_description=readme,
-    long_description_content_type='text/markdown',
     url='https://github.com/LucasRGoes/{:s}'.format(REPO_NAME),
     author='Lucas Góes',
     author_email='lucas.rd.goes@gmail.com',
