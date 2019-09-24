@@ -41,6 +41,7 @@ jobs:
         steps:
             - checkout
             - run: sudo apt install twine
+            - run: sudo pip install -U twine wheel setuptools
             - run:
                 name: init .pypirc
                 command: |
