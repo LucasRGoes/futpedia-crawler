@@ -40,7 +40,6 @@ jobs:
             PIPENV_VENV_IN_PROJECT: true
         steps:
             - checkout
-            - run: sudo apt install twine
             - run: sudo pip install -U twine wheel setuptools
             - run:
                 name: init .pypirc
