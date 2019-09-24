@@ -45,6 +45,7 @@ jobs:
                 name: init .pypirc
                 command: |
                     echo -e "[pypi]" >> ~/.pypirc
+                    echo -e "repository = https://upload.pypi.org/legacy/" >> ~/.pypirc
                     echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
                     echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
             - run:
