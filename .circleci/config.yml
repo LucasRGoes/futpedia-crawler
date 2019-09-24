@@ -39,24 +39,21 @@ jobs:
         environment:
             PIPENV_VENV_IN_PROJECT: true
         steps:
-            - checkout
-            - restore_cache:
-                key: deps9-{{ .Branch }}-{{ checksum "requirements.txt" }}
             - run:
-              name: init .pypirc
-              command: |
-                echo -e "[pypi]" >> ~/.pypirc
-                echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-                echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+                name: init .pypirc
+                command: |
+                    echo -e "[pypi]" >> ~/.pypirc
+                    echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+                    echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
             - run:
-              name: create packages
-              command: |
-                make package
+                name: create packages
+                command: |
+                    make package
             - run:
-              name: upload to pypi
-              command: |
-                . venv/bin/activate
-                twine upload dist/*
+                name: upload to pypi
+                command: |
+                    . venv/bin/activate
+                    twine upload dist/*
 
 workflows:
     version: 2
