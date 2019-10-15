@@ -25,7 +25,7 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     url='https://github.com/LucasRGoes/{:s}'.format(REPO_NAME),
-    download_url='https://github.com/LucasRGoes/{:s}/{:s}.tar.gz'.format(REPO_NAME, VERSION),
+    download_url='https://github.com/LucasRGoes/{:s}/archive/{:s}.tar.gz'.format(REPO_NAME, VERSION),
     author='Lucas Góes',
     author_email='lucas.rd.goes@gmail.com',
     packages=find_packages(exclude=('tests', 'docs')),
