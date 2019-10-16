@@ -1,5 +1,4 @@
-Scrapedia: A web scraper of Futpédia
-====================================
+# Scrapedia: A web scraper of Futpédia
 
 [![CircleCI](https://circleci.com/gh/LucasRGoes/scrapedia/tree/master.svg?style=svg)](https://circleci.com/gh/LucasRGoes/scrapedia/tree/master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -13,12 +12,12 @@ __|__ [Documentation](./docs/en-us/usage.ipynb) __|__ [Architecture](./resources
 ## Installation
 To install via pip:
 
-```bash
+```
 pip install scrapedia
 ```
 
 The package can be installed from the source:
-```bash
+```
 git clone git@github.com/LucasRGoes/scrapedia.git
 cd scrapedia
 git checkout master
